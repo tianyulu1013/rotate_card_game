@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>五行旋转牌 - Five Elements Rotational Cards</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 🌟 独立动画贴图图层 -->
+    <div id="animation-overlay" class="animation-overlay"></div>
+
+    <div class="app-container">
+        <!-- 游戏顶栏 (极致紧凑完全展露版) -->
+        <header class="game-header">
+            <div class="logo">
+                <span class="logo-icon">☯️</span>
+                <h1>五行旋转牌</h1>
+            </div>
+            
+            <div class="status-bar">
+                <div class="player-score p1-score">
+                    <span class="player-dot p1-dot"></span>
+                    <span class="player-name">玩家</span>
+                    <span id="p1-card-count" class="score-num">0</span>
+                </div>
+                
+                <div class="turn-indicator" id="turn-indicator">
+                    <span id="turn-text">玩家回合</span>
+                </div>
+
+                <div class="player-score p2-score">
+                    <span id="p2-card-count" class="score-num">0</span>
+                    <span class="player-name">AI</span>
+                    <span class="player-dot p2-dot"></span>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <!-- 🔢 显示模式切换 -->
+                <div class="header-select-group">
+                    <span class="select-label">显示:</span>
+                    <select id="select-element-mode" class="custom-select">
+                        <option value="wuxing">☯️ 五行 (木火土金水)</option>
+                        <option value="number">🔢 数字 (5克4克3克2克1)</option>
+                    </select>
+                </div>
+
+                <!-- 先手者选择 -->
+                <div class="header-select-group">
+                    <span class="select-label">先手:</span>
+                    <select id="select-first-player" class="custom-select">
+                        <option value="1">玩家先手 (蓝)</option>
+                        <option value="2">AI 先手 (红)</option>
+                        <option value="random">🎲 随机先手</option>
+                    </select>
+                </div>
+
+                <!-- 连锁开关 -->
+                <label class="toggle-switch">
+                    <input type="checkbox" id="toggle-combo" checked>
+                    <span class="slider"></span>
+                    <span class="toggle-label">连锁</span>
+                </label>
+
+                <!-- 📖 规则书按钮 & 重新开局按钮 (全显) -->
+                <button id="btn-open-rules" class="btn btn-secondary">📖 规则</button>
+                <button id="btn-restart" class="btn btn-secondary">重新开局</button>
+            </div>
+        </header>
+
+        <!-- 游戏核心区 (AI手牌 + 3D牌堆/棋盘/日志 + 玩家手牌) -->
+        <main class="game-layout">
+            <!-- AI 手牌区 -->
+            <section class="hand-section ai-hand-section">
+                <div class="section-title">AI 手牌 (对方)</div>
+                <div class="hand-container" id="ai-hand">
+                    <!-- 动态生成 AI 5张手牌 -->
+                </div>
+            </section>
+
+            <!-- 棋盘 + 3D实体牌堆 + 战况日志三栏布局 -->
+            <div class="center-content-wrapper">
+                <!-- 🎴 3D 实体抓牌牌堆 -->
+                <aside class="deck-pile-section">
+                    <div class="deck-pile-title">🎴 摸牌堆</div>
+                    <div class="deck-3d-stack" id="deck-stack">
+                        <div class="deck-card-layer layer-3"></div>
+                        <div class="deck-card-layer layer-2"></div>
+                        <div class="deck-card-layer layer-1"></div>
+                        <div class="card card-back-pokeball deck-top-card">
+                            <div class="pokeball-button">
+                                <div class="pokeball-inner-core"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="deck-count-badge">余 <span id="deck-remaining">20</span> 张</div>
+                </aside>
+
+                <!-- 4x4 棋盘区 -->
+                <section class="board-section">
+                    <div class="board-container">
+                        <div class="board-grid" id="board-grid">
+                            <!-- 16 个格子动态生成 -->
+                        </div>
+                        <!-- 战斗动态文字播报浮层 -->
+                        <div id="combat-banner" class="combat-banner hidden"></div>
+                    </div>
+                </section>
+
+                <!-- 📜 战况历史日志面板 -->
+                <aside class="combat-log-section">
+                    <div class="log-header">
+                        <span class="log-title">📜 战况历史日志</span>
+                        <button id="btn-clear-log" class="btn-text">清空</button>
+                    </div>
+                    <div class="log-list-container" id="log-list">
+                        <div class="log-entry log-system">☯️ 游戏开始，双方抽满 5 张手牌。</div>
+                    </div>
+                </aside>
+            </div>
+
+            <!-- 控制面板与玩家手牌区 -->
+            <section class="hand-section player-hand-section">
+                <div class="hand-controls">
+                    <span class="section-title">玩家手牌 (点击选择)</span>
+                    <div class="control-buttons">
+                        <button id="btn-rotate" class="btn btn-action" disabled>
+                            <span class="icon">🔄</span> 顺时针旋转 90° (快捷键 R)
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="hand-container" id="player-hand">
+                    <!-- 动态生成玩家 5张手牌 -->
+                </div>
+            </section>
+        </main>
+
+        <!-- ☯️ / 🔢 完整法则图谱（根据模式动态切换） -->
+        <footer class="elements-legend" id="elements-legend">
+            <!-- JS 动态渲染图谱内容 -->
+        </footer>
+
+        <!-- 📖 规则手册弹窗 -->
+        <div id="rulebook-modal" class="modal-overlay hidden">
+            <div class="modal-card rulebook-card">
+                <div class="rulebook-header">
+                    <h2>📖 五行旋转牌 - 规则说明</h2>
+                    <button id="btn-close-rules" class="btn-close">&times;</button>
+                </div>
+
+                <div class="rulebook-body">
+                    <div class="rule-section">
+                        <h3>🏆 1. 胜负判定</h3>
+                        <p>4×4 棋盘（共 16 格）。盘满或双方无牌可出时，<b>控制卡牌数量多者获胜</b>。</p>
+                    </div>
+
+                    <div class="rule-section">
+                        <h3>🗺️ 2. 落子与护盾</h3>
+                        <p>▪ 可以在棋盘任意空格落子。</p>
+                        <p>▪ 全场第一张打出的卡牌自动获得【神圣护盾 🛡️】。</p>
+                    </div>
+
+                    <div class="rule-section">
+                        <h3>⚔️ 3. 相克 (翻牌)</h3>
+                        <div class="rule-highlight overcome-bg">
+                            <b>⚔️ 五行模式：木克土 → 土克水 → 水克火 → 火克金 → 金克木</b><br>
+                            <b>🔢 数字模式 (大压小)：5克4 → 4克3 → 3克2 → 2克1 → 1克5</b>
+                        </div>
+                        <p>当你的接触边相克敌方接触边时，敌方卡牌旋转 180° 并转换为你的卡牌。</p>
+                    </div>
+
+                    <div class="rule-section">
+                        <h3>🌟 4. 相生 (授盾)</h3>
+                        <div class="rule-highlight generate-bg">
+                            <b>🌟 五行模式：木生火 → 火生土 → 土生金 → 金生水 → 水生木</b><br>
+                            <b>🔢 数字模式 (隔位生)：1生3 → 3生5 → 5生2 → 2生4 → 4生1</b>
+                        </div>
+                        <p>当接触边触发相生时，<b>被生的一方</b>获得【护盾 🛡️】。护盾可抵挡一次相克翻牌。</p>
+                    </div>
+
+                    <div class="rule-section">
+                        <h3>💥 5. 连锁反应</h3>
+                        <p>刚被翻转转换的卡牌，会继续对其相邻卡牌进行相克与相生判定。</p>
+                    </div>
+                </div>
+
+                <div class="rulebook-footer">
+                    <button id="btn-understood" class="btn btn-primary">确定</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 结算弹窗 -->
+        <div id="game-modal" class="modal-overlay hidden">
+            <div class="modal-card">
+                <h2 id="modal-title">游戏结束</h2>
+                <div id="modal-body" class="modal-content"></div>
+                <button id="modal-btn-restart" class="btn btn-primary">再玩一局</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
