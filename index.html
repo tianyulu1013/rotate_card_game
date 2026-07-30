@@ -31,7 +31,7 @@
                 
                 <div class="player-score p2-score">
                     <span id="p2-card-count" class="score-num">0</span>
-                    <span class="player-name" id="ai-style-label">AI</span>
+                    <span class="player-name" id="ai-style-label">对手</span>
                     <span class="player-dot p2-dot"></span>
                 </div>
             </div>
@@ -51,18 +51,18 @@
                         <span class="select-label">先手:</span>
                         <select id="select-first-player" class="custom-select">
                             <option value="1">玩家</option>
-                            <option value="2">AI</option>
+                            <option value="2">对手</option>
                             <option value="random" selected>🎲 随机</option>
                         </select>
                     </div>
 
                     <div class="header-select-group">
-                        <span class="select-label">AI:</span>
+                        <span class="select-label">对手:</span>
                         <select id="select-ai-style" class="custom-select">
-                            <option value="random">🎲 随机风格</option>
-                            <option value="fighter">🌊 小霞 · 进攻</option>
-                            <option value="fortress">🪨 小刚 · 防守</option>
-                            <option value="combo">⚡ 小智 · 连锁</option>
+                            <option value="random">🎲 随机</option>
+                            <option value="fighter">🌊 小霞</option>
+                            <option value="fortress">🪨 小刚</option>
+                            <option value="combo">⚡ 小智</option>
                         </select>
                     </div>
 
@@ -93,7 +93,7 @@
         <main class="game-layout">
             <!-- AI 手牌区 -->
             <section class="hand-section ai-hand-section">
-                <div class="section-title" id="ai-hand-title">AI 手牌</div>
+                <div class="section-title" id="ai-hand-title">对手手牌</div>
                 <div class="hand-container" id="ai-hand">
                     <!-- 动态生成 AI 5张手牌 -->
                 </div>
@@ -197,18 +197,18 @@
                         <span class="setting-label">先后手:</span>
                         <select id="select-first-player-mobile" class="custom-select select-mobile-full">
                             <option value="1">玩家先手 (蓝)</option>
-                            <option value="2">AI 先手 (红)</option>
+                            <option value="2">对手先手 (红)</option>
                             <option value="random" selected>🎲 随机先手</option>
                         </select>
                     </div>
 
                     <div class="settings-item-row">
-                        <span class="setting-label">AI 风格:</span>
+                        <span class="setting-label">选择对手:</span>
                         <select id="select-ai-style-mobile" class="custom-select select-mobile-full">
-                            <option value="random">🎲 随机风格</option>
-                            <option value="fighter">🌊 小霞 · 进攻</option>
-                            <option value="fortress">🪨 小刚 · 防守</option>
-                            <option value="combo">⚡ 小智 · 连锁</option>
+                            <option value="random">🎲 随机</option>
+                            <option value="fighter">🌊 小霞</option>
+                            <option value="fortress">🪨 小刚</option>
+                            <option value="combo">⚡ 小智</option>
                         </select>
                     </div>
 

@@ -14,20 +14,17 @@ const AI_STYLE_DEFINITIONS = {
     fighter: {
         name: '小霞',
         icon: '🌊',
-        avatarUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/121.png',
-        description: '偏爱立即翻牌、破盾与贴身进攻'
+        avatarUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/121.png'
     },
     fortress: {
         name: '小刚',
         icon: '🪨',
-        avatarUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/95.png',
-        description: '偏爱边角锚点、关键护盾与低暴露阵地'
+        avatarUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/95.png'
     },
     combo: {
         name: '小智',
         icon: '⚡',
-        avatarUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png',
-        description: '偏爱多面接触与完整连锁收益'
+        avatarUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png'
     }
 };
 
@@ -336,7 +333,7 @@ class GameEngine {
         this.board[r][c] = boardCell;
         this.totalPlaced++;
 
-        const playerTag = activeOwner === 1 ? '玩家' : 'AI';
+        const playerTag = activeOwner === 1 ? '玩家' : this.getAIStyleMeta().name;
         onLogMsg(`🃏 ${playerTag} 打出 [${card.name}] 落子于 (${r+1}, ${c+1})${isFirstCardOfGame ? ' 🛡️ [先手特权: 附带神圣护盾]' : ''}`, activeOwner);
         renderCallback();
 
@@ -945,9 +942,9 @@ document.addEventListener('DOMContentLoaded', () => {
         selectAIStyleMobile.value = choice;
 
         const choiceText = choice === 'random'
-            ? '🎲 随机风格'
+            ? '🎲 随机'
             : `${AI_STYLE_DEFINITIONS[choice].icon} ${AI_STYLE_DEFINITIONS[choice].name}`;
-        const logMsg = `🤖 游戏重置，AI 风格调整为：${choiceText}`;
+        const logMsg = `🤖 游戏重置，对手调整为：${choiceText}`;
         logListEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         mobileLogListContainerEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         initGameFlow();
@@ -957,7 +954,7 @@ document.addEventListener('DOMContentLoaded', () => {
         game.resetGame();
         render();
         const aiStyle = game.getAIStyleMeta();
-        addLogEntry(`🤖 本局 AI：${aiStyle.icon} ${aiStyle.name}型 · ${aiStyle.description}`, 'system');
+        addLogEntry(`🤖 本局对手：${aiStyle.icon} ${aiStyle.name}`, 'system');
         await game.performOpeningDeal(
             () => render(),
             (owner, slotIdx, duration) => triggerDrawFlyingAnim(owner, slotIdx, duration),
@@ -1387,8 +1384,8 @@ document.addEventListener('DOMContentLoaded', () => {
         p1ScoreEl.textContent = scores.p1;
         p2ScoreEl.textContent = scores.p2;
         const avatarHtml = `<img class="ai-avatar" src="${aiStyle.avatarUrl}" alt="${aiStyle.name}头像">`;
-        aiStyleLabelEl.innerHTML = `${avatarHtml}<span>AI·${aiStyle.name}</span>`;
-        aiHandTitleEl.innerHTML = `${avatarHtml}<span>AI · ${aiStyle.name}</span>`;
+        aiStyleLabelEl.innerHTML = `${avatarHtml}<span>${aiStyle.name}</span>`;
+        aiHandTitleEl.innerHTML = `${avatarHtml}<span>${aiStyle.name} 手牌</span>`;
         deckRemainingEl.textContent = game.deck.length;
 
         if (game.gameOver) {
@@ -1421,15 +1418,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showEndGameModal(scores) {
+        const opponentName = game.getAIStyleMeta().name;
         showModal(modalEl);
         if (scores.p1 > scores.p2) {
             modalTitleEl.textContent = '🎉 恭喜大获全胜！';
-            modalBodyEl.innerHTML = `你在 4×4 棋盘中最终控制了 <b style="color:#2563eb;font-size:1.4rem">${scores.p1}</b> 张牌！<br>AI 仅控制了 ${scores.p2} 张牌。`;
+            modalBodyEl.innerHTML = `你在 4×4 棋盘中最终控制了 <b style="color:#2563eb;font-size:1.4rem">${scores.p1}</b> 张牌！<br>${opponentName}仅控制了 ${scores.p2} 张牌。`;
             addLogEntry(`🎉 游戏结束，玩家以 ${scores.p1}:${scores.p2} 大获全胜！`, 1);
         } else if (scores.p2 > scores.p1) {
             modalTitleEl.textContent = '💔 遗憾惜败！';
-            modalBodyEl.innerHTML = `AI 控制了 <b style="color:#dc2626;font-size:1.4rem">${scores.p2}</b> 张牌。<br>你控制了 ${scores.p1} 张牌，再接再励！`;
-            addLogEntry(`💔 游戏结束，AI 以 ${scores.p2}:${scores.p1} 获胜！`, 2);
+            modalBodyEl.innerHTML = `${opponentName}控制了 <b style="color:#dc2626;font-size:1.4rem">${scores.p2}</b> 张牌。<br>你控制了 ${scores.p1} 张牌，再接再励！`;
+            addLogEntry(`💔 游戏结束，${opponentName}以 ${scores.p2}:${scores.p1} 获胜！`, 2);
         } else {
             modalTitleEl.textContent = '🤝 势均力敌 - 平局！';
             modalBodyEl.innerHTML = `双方各自控制了 <b>${scores.p1}</b> 张牌！`;
