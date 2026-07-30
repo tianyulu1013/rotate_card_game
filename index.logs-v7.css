@@ -105,6 +105,9 @@ body {
 
 /* 🔒 桌面端顶栏 Flex 布局 */
 .game-header {
+    position: relative;
+    z-index: 200;
+    overflow: visible;
     height: 52px;
     min-height: 52px;
     flex: 0 0 52px;
