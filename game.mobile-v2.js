@@ -1,5 +1,5 @@
 /**
- * 五行旋转牌 (Five Elements Rotational Cards) - Core Game Engine (纯 Flexbox 动态自适应 & 完美弹窗防御版)
+ * 五行旋转牌 (Five Elements Rotational Cards) - Core Game Engine
  */
 
 const ELEMENTS_DEFINITIONS = {
