@@ -31,26 +31,40 @@ const AI_STYLE_DEFINITIONS = {
         icon: '🌊',
         avatarUrl: 'assets/avatars/misty-official.png',
         avatarType: 'trainer',
-        avatarPosition: '52% 16%'
+        avatarFace: { x: 207, y: 45, scale: 0.48 }
     },
     brock: {
         name: '小刚',
         icon: '🪨',
         avatarUrl: 'assets/avatars/brock-official.png',
         avatarType: 'trainer',
-        avatarPosition: '63% 14%'
+        avatarFace: { x: 250, y: 43, scale: 0.43 }
     },
     ash: {
         name: '小智',
         icon: '⚡',
         avatarUrl: 'assets/avatars/ash-official.png',
         avatarType: 'trainer',
-        avatarPosition: '57% 20%'
+        avatarFace: { x: 225, y: 49, scale: 0.4 }
     }
 };
 
 const BEGINNER_AI_STYLE_KEYS = ['meowth', 'psyduck', 'eevee'];
 const ADVANCED_AI_STYLE_KEYS = ['misty', 'brock', 'ash'];
+
+function createAIAvatarHtml(aiStyle) {
+    const avatarClass = aiStyle.avatarType === 'trainer' ? ' ai-avatar--trainer' : '';
+    const faceStyle = aiStyle.avatarFace
+        ? ` style="--avatar-x:-${aiStyle.avatarFace.x}px;--avatar-y:-${aiStyle.avatarFace.y}px;--avatar-scale:${aiStyle.avatarFace.scale}"`
+        : '';
+    return `<span class="ai-avatar${avatarClass}"${faceStyle}><img src="${aiStyle.avatarUrl}" alt="${aiStyle.name}头像"></span>`;
+}
+
+function createRandomAvatarStack(keys) {
+    return `<span class="ai-random-avatars">${keys
+        .map(key => createAIAvatarHtml(AI_STYLE_DEFINITIONS[key]))
+        .join('')}</span>`;
+}
 
 // 🎯 30 张卡牌与初代宝可梦 (Gen 1) 精准对应表
 const EXACT_30_CARDS_DEFINITIONS = [
@@ -914,6 +928,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (m) m.classList.add('hidden');
     });
 
+    const aiPickerControls = [
+        createAIChoicePicker(selectAIStyleEl),
+        createAIChoicePicker(selectAIStyleMobile, true)
+    ];
+
+    document.addEventListener('click', (event) => {
+        aiPickerControls.forEach(control => {
+            if (!control.root.contains(event.target)) control.close();
+        });
+    });
+
     if (typeof ResizeObserver !== 'undefined') {
         const boardResizeObserver = new ResizeObserver(() => fitMobileBoard());
         boardResizeObserver.observe(boardSectionEl);
@@ -983,6 +1008,7 @@ document.addEventListener('DOMContentLoaded', () => {
         selectElementModeMobile.value = game.displayMode;
         selectFirstPlayerMobile.value = game.firstPlayerChoice;
         selectAIStyleMobile.value = game.aiStyleChoice;
+        syncAIChoiceControls(game.aiStyleChoice);
         toggleComboMobile.checked = game.enableCombo;
         toggleGenerationComboMobile.checked = game.enableGenerationCombo;
         showModal(mobileSettingsModalEl);
@@ -1130,6 +1156,7 @@ document.addEventListener('DOMContentLoaded', () => {
         game.aiStyleChoice = choice;
         selectAIStyleEl.value = choice;
         selectAIStyleMobile.value = choice;
+        syncAIChoiceControls(choice);
 
         const randomChoiceLabels = {
             random: '🎲 入门随机',
@@ -1141,6 +1168,91 @@ document.addEventListener('DOMContentLoaded', () => {
         logListEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         mobileLogListContainerEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         initGameFlow();
+    }
+
+    function getAIChoiceContent(choice) {
+        if (choice === 'random') {
+            return `${createRandomAvatarStack(BEGINNER_AI_STYLE_KEYS)}<span>入门随机</span>`;
+        }
+        if (choice === 'advanced-random') {
+            return `${createRandomAvatarStack(ADVANCED_AI_STYLE_KEYS)}<span>高级随机</span>`;
+        }
+
+        const aiStyle = AI_STYLE_DEFINITIONS[choice];
+        return `${createAIAvatarHtml(aiStyle)}<span>${aiStyle.name}</span>`;
+    }
+
+    function createAIChoicePicker(selectEl, closeMobileSettingsOnChoice = false) {
+        const groups = [
+            { label: '入门对手', choices: ['random', ...BEGINNER_AI_STYLE_KEYS] },
+            { label: '高级对手', choices: ['advanced-random', ...ADVANCED_AI_STYLE_KEYS] }
+        ];
+        const picker = document.createElement('div');
+        picker.className = 'ai-picker';
+        picker.innerHTML = `
+            <button class="ai-picker-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+                <span class="ai-picker-trigger-content"></span>
+            </button>
+            <div class="ai-picker-menu hidden" role="listbox">
+                ${groups.map(group => `
+                    <div class="ai-picker-group">
+                        <div class="ai-picker-group-label">${group.label}</div>
+                        ${group.choices.map(choice => `
+                            <button class="ai-picker-option" type="button" role="option" data-choice="${choice}">
+                                ${getAIChoiceContent(choice)}
+                            </button>
+                        `).join('')}
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        selectEl.classList.add('ai-native-select-enhanced');
+        selectEl.insertAdjacentElement('afterend', picker);
+
+        const trigger = picker.querySelector('.ai-picker-trigger');
+        const triggerContent = picker.querySelector('.ai-picker-trigger-content');
+        const menu = picker.querySelector('.ai-picker-menu');
+        const options = [...picker.querySelectorAll('.ai-picker-option')];
+
+        const close = () => {
+            menu.classList.add('hidden');
+            trigger.setAttribute('aria-expanded', 'false');
+        };
+        const setValue = (choice) => {
+            triggerContent.innerHTML = getAIChoiceContent(choice);
+            options.forEach(option => {
+                const isSelected = option.dataset.choice === choice;
+                option.classList.toggle('is-selected', isSelected);
+                option.setAttribute('aria-selected', String(isSelected));
+            });
+        };
+
+        trigger.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const willOpen = menu.classList.contains('hidden');
+            aiPickerControls.forEach(control => {
+                if (control.root !== picker) control.close();
+            });
+            menu.classList.toggle('hidden', !willOpen);
+            trigger.setAttribute('aria-expanded', String(willOpen));
+        });
+
+        options.forEach(option => {
+            option.addEventListener('click', (event) => {
+                event.stopPropagation();
+                applyAIStyleChoice(option.dataset.choice);
+                close();
+                if (closeMobileSettingsOnChoice) hideModal(mobileSettingsModalEl);
+            });
+        });
+
+        setValue(selectEl.value);
+        return { root: picker, close, setValue };
+    }
+
+    function syncAIChoiceControls(choice) {
+        aiPickerControls.forEach(control => control.setValue(choice));
     }
 
     async function initGameFlow() {
@@ -1671,11 +1783,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const aiStyle = game.getAIStyleMeta();
         p1ScoreEl.textContent = scores.p1;
         p2ScoreEl.textContent = scores.p2;
-        const avatarClass = aiStyle.avatarType === 'trainer' ? ' ai-avatar--trainer' : '';
-        const avatarStyle = aiStyle.avatarPosition
-            ? ` style="object-position:${aiStyle.avatarPosition}"`
-            : '';
-        const avatarHtml = `<img class="ai-avatar${avatarClass}" src="${aiStyle.avatarUrl}" alt="${aiStyle.name}头像"${avatarStyle}>`;
+        const avatarHtml = createAIAvatarHtml(aiStyle);
         aiStyleLabelEl.innerHTML = `${avatarHtml}<span>${aiStyle.name}</span>`;
         aiHandTitleEl.innerHTML = `${avatarHtml}<span>${aiStyle.name} 手牌</span>`;
         deckRemainingEl.textContent = game.deck.length;

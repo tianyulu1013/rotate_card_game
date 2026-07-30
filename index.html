@@ -3,9 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>精灵翻翻阵</title>
+    <script>
+        (() => {
+            const pageVersion = '20260730-3';
+            const url = new URL(window.location.href);
+            if (url.searchParams.get('v') !== pageVersion) {
+                url.searchParams.set('v', pageVersion);
+                window.location.replace(url.toString());
+            }
+        })();
+    </script>
     <!-- 使用版本化文件名，兼容简单静态服务器并绕过手机浏览器缓存 -->
-    <link rel="stylesheet" href="index.logs-v7.css?v=20260730-2">
+    <link rel="stylesheet" href="index.logs-v7.css?v=20260730-3">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
@@ -365,6 +378,6 @@
         </div>
     </div>
 
-    <script src="game.logs-v7.js?v=20260730-2"></script>
+    <script src="game.logs-v7.js?v=20260730-3"></script>
 </body>
 </html>
