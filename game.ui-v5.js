@@ -1,5 +1,5 @@
 /**
- * 五行旋转牌 (Five Elements Rotational Cards) - AI Styles and Rules Game Engine
+ * 五行旋转牌 (Five Elements Rotational Cards) - AI Styles, Rules, and Mobile UI Game Engine
  */
 
 const ELEMENTS_DEFINITIONS = {
@@ -102,7 +102,7 @@ class GameEngine {
     constructor() {
         this.boardSize = 4;
         this.enableCombo = true;
-        this.firstPlayerChoice = '1';
+        this.firstPlayerChoice = 'random';
         this.aiStyleChoice = 'random';
         this.activeAIStyle = 'fighter';
         this.displayMode = 'wuxing'; // 'wuxing' | 'number'
@@ -691,8 +691,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const aiHandEl = document.getElementById('ai-hand');
     const deckStackEl = document.getElementById('deck-stack');
     const animationOverlayEl = document.getElementById('animation-overlay');
-    const turnIndicatorEl = document.getElementById('turn-indicator');
-    const turnTextEl = document.getElementById('turn-text');
     const p1ScoreEl = document.getElementById('p1-card-count');
     const p2ScoreEl = document.getElementById('p2-card-count');
     const aiStyleLabelEl = document.getElementById('ai-style-label');
@@ -1358,14 +1356,6 @@ document.addEventListener('DOMContentLoaded', () => {
         aiStyleLabelEl.textContent = `AI·${aiStyle.name}`;
         aiHandTitleEl.textContent = `${aiStyle.icon} AI · ${aiStyle.name}`;
         deckRemainingEl.textContent = game.deck.length;
-
-        if (game.currentTurn === 1) {
-            turnIndicatorEl.className = 'turn-indicator turn-p1';
-            turnTextEl.textContent = game.isProcessingAnim ? '发牌/动画播放中...' : '玩家回合 (选择手牌落子)';
-        } else {
-            turnIndicatorEl.className = 'turn-indicator turn-p2';
-            turnTextEl.textContent = game.isProcessingAnim ? 'AI 连锁计算中...' : 'AI 思考中...';
-        }
 
         if (game.gameOver) {
             showEndGameModal(scores);

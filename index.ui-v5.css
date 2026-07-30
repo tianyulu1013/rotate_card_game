@@ -1,4 +1,4 @@
-/* 浅色高质感设计系统（AI 风格与透明圣盾版） */
+/* 浅色高质感设计系统（AI 风格、透明圣盾与手机界面版） */
 :root {
     --bg-light: #f8fafc;
     --bg-card: #ffffff;
@@ -138,22 +138,6 @@ body {
 
 .player-name { font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; white-space: nowrap; }
 .score-num { font-size: 1.05rem; font-weight: 800; color: var(--text-primary); min-width: 16px; text-align: center; }
-
-.turn-indicator {
-    width: 160px;
-    height: 32px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 10px;
-    font-weight: 700;
-    font-size: 0.78rem;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-    white-space: nowrap;
-    flex: 0 0 160px;
-}
-.turn-p1 { background: var(--p1-light); border: 1px solid var(--p1-blue); color: var(--p1-blue); box-shadow: 0 0 10px var(--p1-glow); }
-.turn-p2 { background: var(--p2-light); border: 1px solid var(--p2-red); color: var(--p2-red); box-shadow: 0 0 10px var(--p2-glow); }
 
 .header-actions { display: flex; align-items: center; gap: 0.4rem; flex: 0 0 auto; }
 .desktop-header-controls { display: flex; align-items: center; gap: 0.4rem; }
@@ -958,8 +942,6 @@ input:checked + .slider::before { transform: translateX(12px); }
     .player-score { padding: 0.15rem 0.35rem; border-radius: 10px; }
     .player-name { display: none; }
     .score-num { font-size: 0.9rem; width: 12px; }
-
-    .turn-indicator { width: 95px; flex: 0 0 95px; height: 26px; font-size: 0.65rem; border-radius: 8px; }
 
     .desktop-only-log { display: none !important; }
     .desktop-only-key { display: none !important; }

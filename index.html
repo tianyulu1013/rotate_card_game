@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>五行旋转牌 - Five Elements Rotational Cards</title>
     <!-- 使用版本化文件名，兼容简单静态服务器并绕过手机浏览器缓存 -->
-    <link rel="stylesheet" href="index.rules-v4.css">
+    <link rel="stylesheet" href="index.ui-v5.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
@@ -29,10 +29,6 @@
                     <span id="p1-card-count" class="score-num">0</span>
                 </div>
                 
-                <div class="turn-indicator" id="turn-indicator">
-                    <span id="turn-text">玩家回合</span>
-                </div>
-
                 <div class="player-score p2-score">
                     <span id="p2-card-count" class="score-num">0</span>
                     <span class="player-name" id="ai-style-label">AI</span>
@@ -56,7 +52,7 @@
                         <select id="select-first-player" class="custom-select">
                             <option value="1">玩家</option>
                             <option value="2">AI</option>
-                            <option value="random">🎲 随机</option>
+                            <option value="random" selected>🎲 随机</option>
                         </select>
                     </div>
 
@@ -196,7 +192,7 @@
                         <select id="select-first-player-mobile" class="custom-select select-mobile-full">
                             <option value="1">玩家先手 (蓝)</option>
                             <option value="2">AI 先手 (红)</option>
-                            <option value="random">🎲 随机先手</option>
+                            <option value="random" selected>🎲 随机先手</option>
                         </select>
                     </div>
 
@@ -326,6 +322,6 @@
         </div>
     </div>
 
-    <script src="game.rules-v4.js"></script>
+    <script src="game.ui-v5.js"></script>
 </body>
 </html>
