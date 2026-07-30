@@ -1,5 +1,5 @@
 /**
- * 五行旋转牌 (Five Elements Rotational Cards) - Core Game Engine (数字模式: 大压小 5克4克3克2克1克5 版)
+ * 五行旋转牌 (Five Elements Rotational Cards) - Core Game Engine (触屏双击预测确认落子版)
  */
 
 const ELEMENTS_DEFINITIONS = {
@@ -86,6 +86,7 @@ class GameEngine {
         this.displayMode = 'wuxing'; // 'wuxing' | 'number'
         this.isProcessingAnim = false;
         this.previewState = null;
+        this.targetedCell = null; // { r, c }
         this.activeArrow = null;
         this.turnCount = 1;
         this.resetGame();
@@ -105,6 +106,7 @@ class GameEngine {
 
         this.selectedCardIndex = null;
         this.selectedCardRotation = 0;
+        this.targetedCell = null;
         this.gameOver = false;
         this.totalPlaced = 0;
         this.isProcessingAnim = false;
@@ -142,7 +144,7 @@ class GameEngine {
         }
 
         this.isProcessingAnim = false;
-        onLogMsg('✨ 初始手牌发牌完成！全盘任意空格均可自由落子。', 'system');
+        onLogMsg('✨ 发牌完成！点击手牌选定后落子。', 'system');
         renderCallback();
     }
 
@@ -278,6 +280,7 @@ class GameEngine {
 
         this.isProcessingAnim = true;
         this.previewState = null;
+        this.targetedCell = null;
         
         const card = hand[cardIndex];
         hand[cardIndex] = null;
@@ -418,6 +421,7 @@ class GameEngine {
             this.currentTurn = activeOwner === 1 ? 2 : 1;
             this.selectedCardIndex = null;
             this.selectedCardRotation = 0;
+            this.targetedCell = null;
             this.turnCount++;
         }
 
@@ -555,6 +559,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCloseRules = document.getElementById('btn-close-rules');
     const btnUnderstood = document.getElementById('btn-understood');
 
+    // 📜 手机日志弹窗节点
+    const btnOpenLogModal = document.getElementById('btn-open-log-modal');
+    const mobileLogModalEl = document.getElementById('mobile-log-modal');
+    const btnCloseLogModal = document.getElementById('btn-close-log-modal');
+    const btnCloseLogModalConfirm = document.getElementById('btn-close-log-modal-confirm');
+    const btnClearLogMobile = document.getElementById('btn-clear-log-mobile');
+    const mobileLogListContainerEl = document.getElementById('mobile-log-list-container');
+
     // 结算弹窗节点
     const modalEl = document.getElementById('game-modal');
     const modalTitleEl = document.getElementById('modal-title');
@@ -562,6 +574,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalBtnRestart = document.getElementById('modal-btn-restart');
 
     initGameFlow();
+
+    // 📜 手机日志弹窗交互
+    btnOpenLogModal.addEventListener('click', () => {
+        mobileLogModalEl.classList.remove('hidden');
+    });
+
+    btnCloseLogModal.addEventListener('click', () => {
+        mobileLogModalEl.classList.add('hidden');
+    });
+
+    btnCloseLogModalConfirm.addEventListener('click', () => {
+        mobileLogModalEl.classList.add('hidden');
+    });
+
+    btnClearLogMobile.addEventListener('click', () => {
+        logListEl.innerHTML = '<div class="log-entry log-system">📜 历史日志已清空。</div>';
+        mobileLogListContainerEl.innerHTML = '<div class="log-entry log-system">📜 历史日志已清空。</div>';
+    });
 
     // 🔢 模式切换绑定 (五行 / 数字大压小 5克4克3克2克1克5)
     selectElementModeEl.addEventListener('change', (e) => {
@@ -586,7 +616,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     selectFirstPlayerEl.addEventListener('change', (e) => {
         game.firstPlayerChoice = e.target.value;
-        logListEl.innerHTML = `<div class="log-entry log-system">⚙️ 游戏重置，先后手调整为：${selectFirstPlayerEl.options[selectFirstPlayerEl.selectedIndex].text}</div>`;
+        const logMsg = `⚙️ 游戏重置，先后手调整为：${selectFirstPlayerEl.options[selectFirstPlayerEl.selectedIndex].text}`;
+        logListEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
+        mobileLogListContainerEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         initGameFlow();
     });
 
@@ -599,6 +631,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnClearLog.addEventListener('click', () => {
         logListEl.innerHTML = '<div class="log-entry log-system">📜 历史日志已清空。</div>';
+        mobileLogListContainerEl.innerHTML = '<div class="log-entry log-system">📜 历史日志已清空。</div>';
     });
 
     window.addEventListener('keydown', (e) => {
@@ -609,13 +642,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnRotate.addEventListener('click', rotateSelectedCard);
     btnRestart.addEventListener('click', () => { 
-        logListEl.innerHTML = '<div class="log-entry log-system">☯️ 新游戏开始！准备进行开局发牌仪式...</div>';
+        const logMsg = '☯️ 新游戏开始！准备进行开局发牌仪式...';
+        logListEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
+        mobileLogListContainerEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         initGameFlow(); 
     });
     
     modalBtnRestart.addEventListener('click', () => {
         modalEl.classList.add('hidden');
-        logListEl.innerHTML = '<div class="log-entry log-system">☯️ 新游戏开始！准备进行开局发牌仪式...</div>';
+        const logMsg = '☯️ 新游戏开始！准备进行开局发牌仪式...';
+        logListEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
+        mobileLogListContainerEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         initGameFlow();
     });
 
@@ -636,6 +673,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function rotateSelectedCard() {
         if (game.selectedCardIndex !== null && game.currentTurn === 1 && !game.isProcessingAnim) {
             game.selectedCardRotation = (game.selectedCardRotation + 1) % 4;
+            game.targetedCell = null; // 旋转卡牌时重置选定目标
+            game.previewState = null;
             renderPlayerHand();
             renderBoard();
         }
@@ -736,8 +775,13 @@ document.addEventListener('DOMContentLoaded', () => {
         entry.className = `log-entry ${cls}`;
         entry.textContent = text;
 
+        const mobileEntry = entry.cloneNode(true);
+
         logListEl.appendChild(entry);
         logListEl.scrollTop = logListEl.scrollHeight;
+
+        mobileLogListContainerEl.appendChild(mobileEntry);
+        mobileLogListContainerEl.scrollTop = mobileLogListContainerEl.scrollHeight;
     }
 
     function showBanner(msg) {
@@ -760,7 +804,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (game.displayMode === 'number') {
             elementsLegendEl.innerHTML = `
                 <div class="legend-row">
-                    <span class="legend-label">⚔️ 相克法则 (大压小):</span>
+                    <span class="legend-label">⚔️ 相克 (大压小):</span>
                     <span class="elem-tag elem-earth">5</span><span class="arrow">→</span>
                     <span class="elem-tag elem-water">4</span><span class="arrow">→</span>
                     <span class="elem-tag elem-fire">3</span><span class="arrow">→</span>
@@ -769,7 +813,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="elem-tag elem-earth">5</span>
                 </div>
                 <div class="legend-row">
-                    <span class="legend-label">🌟 相生法则 (隔位生):</span>
+                    <span class="legend-label">🌟 相生 (隔位生):</span>
                     <span class="elem-tag elem-wood">1</span><span class="arrow">→</span>
                     <span class="elem-tag elem-fire">3</span><span class="arrow">→</span>
                     <span class="elem-tag elem-earth">5</span><span class="arrow">→</span>
@@ -815,11 +859,17 @@ document.addEventListener('DOMContentLoaded', () => {
                                 !game.isProcessingAnim &&
                                 game.isValidPlacement(r, c);
 
+                const isTargeted = game.targetedCell && game.targetedCell.r === r && game.targetedCell.c === c;
+
                 if (isValid) {
                     cellEl.classList.add('valid-target');
+                    if (isTargeted) {
+                        cellEl.classList.add('targeted-cell-active');
+                    }
                     
+                    // 桌面 Hover 预判
                     cellEl.addEventListener('mouseenter', () => {
-                        if (game.selectedCardIndex !== null && game.currentTurn === 1) {
+                        if (game.selectedCardIndex !== null && game.currentTurn === 1 && !game.targetedCell) {
                             const card = game.p1Hand[game.selectedCardIndex];
                             game.previewState = game.getPreviewOutcome(r, c, card, game.selectedCardRotation);
                             applyPreviewUI(r, c);
@@ -827,11 +877,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
 
                     cellEl.addEventListener('mouseleave', () => {
-                        game.previewState = null;
-                        clearPreviewUI();
+                        if (!game.targetedCell) {
+                            game.previewState = null;
+                            clearPreviewUI();
+                        }
                     });
 
-                    cellEl.addEventListener('click', () => handlePlayerPlacement(r, c));
+                    // 📱 触屏 2-Step 双击/点击落子处理
+                    cellEl.addEventListener('click', () => handleCellClick(r, c));
                 }
 
                 const boardCell = game.board[r][c];
@@ -862,7 +915,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!game.previewState) return;
 
         const outcome = game.previewState;
-        let msg = `🔮 全景预测：`;
+        let msg = `🔮 [预判选定]: `;
         const parts = [];
         if (outcome.maxChainLevel > 1) parts.push(`触发 ${outcome.maxChainLevel} 级连锁`);
         if (outcome.flipCells.length > 0) parts.push(`翻转 ${outcome.flipCells.length} 张敌牌`);
@@ -871,6 +924,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (parts.length === 0) msg += `平局无改变`;
         else msg += parts.join('，');
+
+        msg += ` (再次点击确认落子)`;
 
         showBanner(msg);
         applyPreviewUIState();
@@ -912,22 +967,34 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    async function handlePlayerPlacement(r, c) {
+    async function handleCellClick(r, c) {
         if (game.selectedCardIndex === null || game.currentTurn !== 1 || game.isProcessingAnim) return;
 
-        const success = await game.executeTurnPlacement(
-            r, c, game.selectedCardIndex, game.selectedCardRotation,
-            (msg, owner) => {
-                showBanner(msg);
-                addLogEntry(msg, owner);
-            },
-            () => render(),
-            (owner, slotIdx, duration) => triggerDrawFlyingAnim(owner, slotIdx, duration),
-            (fromR, fromC, toR, toC) => triggerShieldBeamAnim(fromR, fromC, toR, toC)
-        );
+        // 📱 触屏 2-Step 交互：如果点击的不是当前选定的格子，则先进行预判选定
+        const isAlreadyTargeted = game.targetedCell && game.targetedCell.r === r && game.targetedCell.c === c;
 
-        if (success && !game.gameOver && game.currentTurn === 2) {
-            setTimeout(processAITurn, 1000);
+        if (!isAlreadyTargeted) {
+            game.targetedCell = { r, c };
+            const card = game.p1Hand[game.selectedCardIndex];
+            game.previewState = game.getPreviewOutcome(r, c, card, game.selectedCardRotation);
+            applyPreviewUI(r, c);
+            renderBoard();
+        } else {
+            // 🎯 第二次点击同一个格子：确认执行落子！
+            const success = await game.executeTurnPlacement(
+                r, c, game.selectedCardIndex, game.selectedCardRotation,
+                (msg, owner) => {
+                    showBanner(msg);
+                    addLogEntry(msg, owner);
+                },
+                () => render(),
+                (owner, slotIdx, duration) => triggerDrawFlyingAnim(owner, slotIdx, duration),
+                (fromR, fromC, toR, toC) => triggerShieldBeamAnim(fromR, fromC, toR, toC)
+            );
+
+            if (success && !game.gameOver && game.currentTurn === 2) {
+                setTimeout(processAITurn, 1000);
+            }
         }
     }
 
@@ -971,6 +1038,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             game.selectedCardIndex = slot;
                             game.selectedCardRotation = 0;
                         }
+                        game.targetedCell = null; // 重新切手牌时清空选定目标
+                        game.previewState = null;
                         btnRotate.disabled = false;
                         render();
                     }
