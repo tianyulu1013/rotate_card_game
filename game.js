@@ -1,5 +1,5 @@
 /**
- * 五行旋转牌 (Five Elements Rotational Cards) - Core Game Engine (点击灰色遮罩外侧退出弹窗版)
+ * 五行旋转牌 (Five Elements Rotational Cards) - Core Game Engine (纯 Flexbox 动态自适应 & 完美弹窗防御版)
  */
 
 const ELEMENTS_DEFINITIONS = {
@@ -584,43 +584,65 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalBodyEl = document.getElementById('modal-body');
     const modalBtnRestart = document.getElementById('modal-btn-restart');
 
+    // 🔒 页面初始化：确保所有 Modal 弹窗均带有 hidden 类（网页端绝不默认开启规则书）
+    [rulebookModalEl, mobileSettingsModalEl, mobileLogModalEl, modalEl].forEach(m => {
+        if (m) m.classList.add('hidden');
+    });
+
     initGameFlow();
 
-    // 🌟 所有弹窗遮罩背景点击退出绑定 (Backdrop Click to Dismiss)
+    // 🔒 通用关闭弹窗辅助函数（兼容 click 与 touchend）
+    function hideModal(modal) {
+        if (modal) modal.classList.add('hidden');
+    }
+
+    function showModal(modal) {
+        if (modal) modal.classList.remove('hidden');
+    }
+
+    function bindDismiss(el, targetModal) {
+        if (!el || !targetModal) return;
+        const handler = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            hideModal(targetModal);
+        };
+        el.addEventListener('click', handler);
+        el.addEventListener('touchend', handler);
+    }
+
+    // 🌟 所有弹窗背景与按钮双重绑定
     [rulebookModalEl, mobileSettingsModalEl, mobileLogModalEl, modalEl].forEach(modal => {
         if (modal) {
             modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.classList.add('hidden');
-                }
+                if (e.target === modal) hideModal(modal);
             });
         }
     });
+
+    bindDismiss(btnCloseRules, rulebookModalEl);
+    bindDismiss(btnUnderstood, rulebookModalEl);
+    bindDismiss(btnCloseMobileSettings, mobileSettingsModalEl);
+    bindDismiss(btnCloseMobileSettingsConfirm, mobileSettingsModalEl);
+    bindDismiss(btnCloseLogModal, mobileLogModalEl);
+    bindDismiss(btnCloseLogModalConfirm, mobileLogModalEl);
 
     // ⚙️ 手机端折叠设置弹窗交互
     btnOpenMobileSettings.addEventListener('click', () => {
         selectElementModeMobile.value = game.displayMode;
         selectFirstPlayerMobile.value = game.firstPlayerChoice;
         toggleComboMobile.checked = game.enableCombo;
-        mobileSettingsModalEl.classList.remove('hidden');
-    });
-
-    btnCloseMobileSettings.addEventListener('click', () => {
-        mobileSettingsModalEl.classList.add('hidden');
-    });
-
-    btnCloseMobileSettingsConfirm.addEventListener('click', () => {
-        mobileSettingsModalEl.classList.add('hidden');
+        showModal(mobileSettingsModalEl);
     });
 
     btnModalOpenRules.addEventListener('click', () => {
-        mobileSettingsModalEl.classList.add('hidden');
-        rulebookModalEl.classList.remove('hidden');
+        hideModal(mobileSettingsModalEl);
+        showModal(rulebookModalEl);
     });
 
     btnModalOpenLog.addEventListener('click', () => {
-        mobileSettingsModalEl.classList.add('hidden');
-        mobileLogModalEl.classList.remove('hidden');
+        hideModal(mobileSettingsModalEl);
+        showModal(mobileLogModalEl);
     });
 
     selectElementModeMobile.addEventListener('change', (e) => {
@@ -638,7 +660,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const logMsg = `⚙️ 游戏重置，先后手调整为：${selectFirstPlayerEl.options[selectFirstPlayerEl.selectedIndex].text}`;
         logListEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         mobileLogListContainerEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
-        mobileSettingsModalEl.classList.add('hidden');
+        hideModal(mobileSettingsModalEl);
         initGameFlow();
     });
 
@@ -651,20 +673,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     btnModalRestart.addEventListener('click', () => {
-        mobileSettingsModalEl.classList.add('hidden');
+        hideModal(mobileSettingsModalEl);
         const logMsg = '☯️ 新游戏开始！准备进行开局发牌仪式...';
         logListEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         mobileLogListContainerEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         initGameFlow();
-    });
-
-    // 📜 手机日志弹窗交互
-    btnCloseLogModal.addEventListener('click', () => {
-        mobileLogModalEl.classList.add('hidden');
-    });
-
-    btnCloseLogModalConfirm.addEventListener('click', () => {
-        mobileLogModalEl.classList.add('hidden');
     });
 
     btnClearLogMobile.addEventListener('click', () => {
@@ -682,15 +695,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     btnOpenRules.addEventListener('click', () => {
-        rulebookModalEl.classList.remove('hidden');
-    });
-
-    btnCloseRules.addEventListener('click', () => {
-        rulebookModalEl.classList.add('hidden');
-    });
-
-    btnUnderstood.addEventListener('click', () => {
-        rulebookModalEl.classList.add('hidden');
+        showModal(rulebookModalEl);
     });
 
     selectFirstPlayerEl.addEventListener('change', (e) => {
@@ -728,7 +733,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     modalBtnRestart.addEventListener('click', () => {
-        modalEl.classList.add('hidden');
+        hideModal(modalEl);
         const logMsg = '☯️ 新游戏开始！准备进行开局发牌仪式...';
         logListEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         mobileLogListContainerEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
@@ -1201,7 +1206,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showEndGameModal(scores) {
-        modalEl.classList.remove('hidden');
+        showModal(modalEl);
         if (scores.p1 > scores.p2) {
             modalTitleEl.textContent = '🎉 恭喜大获全胜！';
             modalBodyEl.innerHTML = `你在 4×4 棋盘中最终控制了 <b style="color:#2563eb;font-size:1.4rem">${scores.p1}</b> 张牌！<br>AI 仅控制了 ${scores.p2} 张牌。`;
