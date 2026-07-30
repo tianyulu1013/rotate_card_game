@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>五行旋转牌 - Five Elements Rotational Cards</title>
     <!-- 🚀 强效防浏览器缓存 Version Query String -->
-    <link rel="stylesheet" href="index.css?v=1.0.3">
+    <link rel="stylesheet" href="index.css?v=1.0.5">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
@@ -15,7 +15,7 @@
     <div id="animation-overlay" class="animation-overlay"></div>
 
     <div class="app-container">
-        <!-- 游戏顶栏 (手机端规则+日志按钮高清全显版) -->
+        <!-- 游戏顶栏 (手机极简单行 + 折叠⚙️设置版) -->
         <header class="game-header">
             <div class="logo">
                 <span class="logo-icon">☯️</span>
@@ -41,52 +41,55 @@
             </div>
 
             <div class="header-actions">
-                <!-- 🔢 显示模式切换 -->
-                <div class="header-select-group">
-                    <span class="select-label">显示:</span>
-                    <select id="select-element-mode" class="custom-select">
-                        <option value="wuxing">☯️ 五行 (木火土金水)</option>
-                        <option value="number">🔢 数字 (5克4克3克2克1)</option>
-                    </select>
+                <!-- 桌面版平铺选项 / 手机版收纳到 ⚙️ 设置 -->
+                <div class="desktop-header-controls">
+                    <div class="header-select-group">
+                        <span class="select-label">显示:</span>
+                        <select id="select-element-mode" class="custom-select">
+                            <option value="wuxing">☯️ 五行 (木火土金水)</option>
+                            <option value="number">🔢 数字 (5克4克3克2克1)</option>
+                        </select>
+                    </div>
+
+                    <div class="header-select-group">
+                        <span class="select-label">先手:</span>
+                        <select id="select-first-player" class="custom-select">
+                            <option value="1">玩家先手 (蓝)</option>
+                            <option value="2">AI 先手 (红)</option>
+                            <option value="random">🎲 随机先手</option>
+                        </select>
+                    </div>
+
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggle-combo" checked>
+                        <span class="slider"></span>
+                        <span class="toggle-label">连锁</span>
+                    </label>
+
+                    <button id="btn-open-rules" class="btn btn-secondary">📖 规则</button>
+                    <button id="btn-restart" class="btn btn-secondary">重新开局</button>
                 </div>
 
-                <!-- 先手者选择 -->
-                <div class="header-select-group">
-                    <span class="select-label">先手:</span>
-                    <select id="select-first-player" class="custom-select">
-                        <option value="1">玩家先手 (蓝)</option>
-                        <option value="2">AI 先手 (红)</option>
-                        <option value="random">🎲 随机先手</option>
-                    </select>
-                </div>
-
-                <!-- 连锁开关 -->
-                <label class="toggle-switch">
-                    <input type="checkbox" id="toggle-combo" checked>
-                    <span class="slider"></span>
-                    <span class="toggle-label">连锁</span>
-                </label>
-
-                <!-- 📖 规则 & 📜 日志弹窗按钮 -->
-                <button id="btn-open-rules" class="btn btn-secondary">📖 规则</button>
-                <button id="btn-open-log-modal" class="btn btn-secondary mobile-log-btn">📜 日志</button>
-                <button id="btn-restart" class="btn btn-secondary">重新开局</button>
+                <!-- 📱 手机端单一 ⚙️ 设置按钮 (点击展开所有功能) -->
+                <button id="btn-open-mobile-settings" class="btn btn-primary mobile-settings-btn">
+                    ⚙️ 设置
+                </button>
             </div>
         </header>
 
-        <!-- 游戏核心区 (AI手牌 + 摸牌提示 + 4x4棋盘 + 玩家手牌) -->
+        <!-- 游戏核心区 (AI手牌 + 摸牌提示 + 4x4正方形棋盘 + 玩家手牌) -->
         <main class="game-layout">
             <!-- AI 手牌区 -->
             <section class="hand-section ai-hand-section">
-                <div class="section-title">AI 手牌 (对方)</div>
+                <div class="section-title">AI 手牌</div>
                 <div class="hand-container" id="ai-hand">
                     <!-- 动态生成 AI 5张手牌 -->
                 </div>
             </section>
 
-            <!-- 中央核心区 (摸牌堆 + 棋盘 + 桌面日志) -->
+            <!-- 中央核心区 (摸牌堆提示条 + 1:1正方形棋盘 + 桌面侧边日志) -->
             <div class="center-content-wrapper">
-                <!-- 🎴 摸牌堆 (桌面3D stack / 手机横条) -->
+                <!-- 🎴 摸牌堆 (桌面3D stack / 手机横向状态条) -->
                 <aside class="deck-pile-section">
                     <div class="deck-pile-title">🎴 摸牌堆</div>
                     <div class="deck-3d-stack" id="deck-stack">
@@ -102,7 +105,7 @@
                     <div class="deck-count-badge">余 <span id="deck-remaining">20</span> 张</div>
                 </aside>
 
-                <!-- 4x4 棋盘区 -->
+                <!-- 4x4 正方形棋盘区 (严格 1:1 比例绝不压扁) -->
                 <section class="board-section">
                     <div class="board-container">
                         <div class="board-grid" id="board-grid">
@@ -113,7 +116,7 @@
                     </div>
                 </section>
 
-                <!-- 📜 战况历史日志面板 (桌面侧边栏) -->
+                <!-- 📜 战况历史日志面板 (仅桌面端侧边显示) -->
                 <aside class="combat-log-section desktop-only-log">
                     <div class="log-header">
                         <span class="log-title">📜 战况历史日志</span>
@@ -125,15 +128,13 @@
                 </aside>
             </div>
 
-            <!-- 控制面板与玩家手牌区 -->
+            <!-- 玩家手牌与旋转控制区 -->
             <section class="hand-section player-hand-section">
                 <div class="hand-controls">
-                    <span class="section-title">玩家手牌 (点击选择)</span>
-                    <div class="control-buttons">
-                        <button id="btn-rotate" class="btn btn-action" disabled>
-                            <span class="icon">🔄</span> <span class="rotate-text-main">旋转 90°</span><span class="desktop-only-key"> (快捷键 R)</span>
-                        </button>
-                    </div>
+                    <span class="section-title">玩家手牌</span>
+                    <button id="btn-rotate" class="btn btn-action" disabled>
+                        <span class="icon">🔄</span> <span class="rotate-text-main">旋转 90°</span><span class="desktop-only-key"> (快捷键 R)</span>
+                    </button>
                 </div>
                 
                 <div class="hand-container" id="player-hand">
@@ -142,12 +143,72 @@
             </section>
         </main>
 
-        <!-- ☯️ / 🔢 完整法则图谱（根据模式动态切换） -->
+        <!-- ☯️ / 🔢 完整法则图谱 -->
         <footer class="elements-legend" id="elements-legend">
             <!-- JS 动态渲染图谱内容 -->
         </footer>
 
-        <!-- 📜 手机端战况日志弹窗 -->
+        <!-- ⚙️ 📱 手机端折叠设置抽屉/弹窗 -->
+        <div id="mobile-settings-modal" class="modal-overlay hidden">
+            <div class="modal-card mobile-settings-card">
+                <div class="rulebook-header">
+                    <h2>⚙️ 游戏设置与工具</h2>
+                    <button id="btn-close-mobile-settings" class="btn-close">&times;</button>
+                </div>
+
+                <div class="settings-body">
+                    <div class="settings-item">
+                        <button id="btn-modal-open-rules" class="btn btn-secondary btn-full">
+                            📖 玩法规则说明
+                        </button>
+                    </div>
+
+                    <div class="settings-item">
+                        <button id="btn-modal-open-log" class="btn btn-secondary btn-full">
+                            📜 战况历史日志
+                        </button>
+                    </div>
+
+                    <div class="settings-item-row">
+                        <span class="setting-label">显示模式:</span>
+                        <select id="select-element-mode-mobile" class="custom-select select-mobile-full">
+                            <option value="wuxing">☯️ 五行 (木火土金水)</option>
+                            <option value="number">🔢 数字 (5克4克3克2克1)</option>
+                        </select>
+                    </div>
+
+                    <div class="settings-item-row">
+                        <span class="setting-label">先后手:</span>
+                        <select id="select-first-player-mobile" class="custom-select select-mobile-full">
+                            <option value="1">玩家先手 (蓝)</option>
+                            <option value="2">AI 先手 (红)</option>
+                            <option value="random">🎲 随机先手</option>
+                        </select>
+                    </div>
+
+                    <div class="settings-item-row">
+                        <span class="setting-label">连锁翻牌:</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-combo-mobile" checked>
+                            <span class="slider"></span>
+                            <span class="toggle-label">开启连锁</span>
+                        </label>
+                    </div>
+
+                    <div class="settings-item" style="margin-top:0.5rem">
+                        <button id="btn-modal-restart" class="btn btn-action btn-full">
+                            🔄 重新开始游戏
+                        </button>
+                    </div>
+                </div>
+
+                <div class="rulebook-footer">
+                    <button id="btn-close-mobile-settings-confirm" class="btn btn-primary btn-full">完成</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 📜 战况日志弹窗 -->
         <div id="mobile-log-modal" class="modal-overlay hidden">
             <div class="modal-card rulebook-card">
                 <div class="rulebook-header">
@@ -182,7 +243,7 @@
                         <h3>🗺️ 2. 落子与护盾</h3>
                         <p>▪ 可以在棋盘任意空格落子。</p>
                         <p>▪ 全场第一张打出的卡牌自动获得【神圣护盾 🛡️】。</p>
-                        <p>▪ <b>手机双击操作</b>：点击第 1 下预览翻牌与加盾预测，再次点击同一格子确认落子。</p>
+                        <p>▪ <b>手机预判落子</b>：点击第 1 下选定预览翻牌与加盾，再次点击同一格子确认落子。</p>
                     </div>
 
                     <div class="rule-section">
@@ -226,6 +287,6 @@
     </div>
 
     <!-- 🚀 强效防浏览器缓存 Version Query String -->
-    <script src="game.js?v=1.0.3"></script>
+    <script src="game.js?v=1.0.5"></script>
 </body>
 </html>

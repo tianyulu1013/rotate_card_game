@@ -1,4 +1,4 @@
-/* 浅色高质感设计系统 (Light Theme Design System - 触屏双击预判落子版) */
+/* 浅色高质感设计系统 (Light Theme Design System - 弹窗防失控与点击外侧退出版) */
 :root {
     --bg-light: #f8fafc;
     --bg-card: #ffffff;
@@ -51,6 +51,11 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+/* 🌟 隐藏通用极强规则 (防覆写) */
+.hidden {
+    display: none !important;
 }
 
 /* 🌟 独立动画贴图图层 (#animation-overlay) */
@@ -154,6 +159,7 @@ body {
 .turn-p2 { background: var(--p2-light); border: 1px solid var(--p2-red); color: var(--p2-red); box-shadow: 0 0 10px var(--p2-glow); }
 
 .header-actions { display: flex; align-items: center; gap: 0.35rem; flex: 0 0 auto; }
+.desktop-header-controls { display: flex; align-items: center; gap: 0.35rem; }
 
 .header-select-group { display: flex; align-items: center; gap: 0.2rem; }
 .select-label { font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); white-space: nowrap; }
@@ -217,8 +223,9 @@ input:checked + .slider::before { transform: translateX(12px); }
 .btn-primary { background: var(--p1-blue); color: #fff; }
 .btn-secondary { background: #ffffff; color: var(--text-primary); border: 1px solid #cbd5e1; }
 .btn-action { background: linear-gradient(135deg, #6366f1, #a855f7); color: #fff; }
+.btn-full { width: 100%; justify-content: center; padding: 0.55rem 1rem; font-size: 0.88rem; }
 
-.mobile-log-btn { display: none; }
+.mobile-settings-btn { display: none; }
 
 .game-layout {
     display: flex;
@@ -447,6 +454,7 @@ input:checked + .slider::before { transform: translateX(12px); }
     justify-content: center;
     align-items: center;
     position: relative;
+    aspect-ratio: 1 / 1;
     transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
@@ -457,7 +465,6 @@ input:checked + .slider::before { transform: translateX(12px); }
     animation: pulseTarget 1.5s infinite;
 }
 
-/* 🎯 第一下选定的高亮预判目标格 */
 .cell.targeted-cell-active {
     border: 3px solid #ec4899 !important;
     background: #fce7f3 !important;
@@ -766,8 +773,38 @@ input:checked + .slider::before { transform: translateX(12px); }
     align-items: center;
 }
 
+/* ⚙️ 手机端折叠设置弹窗样式 */
+.mobile-settings-card {
+    width: 340px;
+    max-width: 92vw;
+    border-radius: 20px;
+    padding: 0;
+    overflow: hidden;
+    text-align: left;
+}
+
+.settings-body {
+    padding: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.settings-item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.setting-label { font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); }
+.select-mobile-full { width: 160px; padding: 0.35rem 0.5rem; }
+
 .rulebook-card {
     width: 480px;
+    max-width: 92vw;
     max-height: 80vh;
     display: flex;
     flex-direction: column;
@@ -828,14 +865,13 @@ input:checked + .slider::before { transform: translateX(12px); }
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(15, 23, 42, 0.4);
+    background: rgba(15, 23, 42, 0.5);
     backdrop-filter: blur(6px);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 100;
+    z-index: 9999; /* 保证 Modal 浮于一切层级之上 */
 }
-.modal-overlay.hidden { display: none; }
 
 .modal-card { background: #ffffff; border: 1px solid #cbd5e1; border-radius: 20px; padding: 2rem; text-align: center; width: 320px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15); }
 .modal-card h2 { font-size: 1.5rem; margin-bottom: 1rem; color: var(--text-primary); }
@@ -843,7 +879,7 @@ input:checked + .slider::before { transform: translateX(12px); }
 
 
 /* ==========================================================================
-   📱 移动端 100% 零下滑单屏自适应视效 (@media max-width: 768px)
+   📱 移动端 100% 零下滑单屏视效 (@media max-width: 768px) - 比例绝不扁塌版
    ========================================================================== */
 @media (max-width: 768px) {
     html, body {
@@ -863,12 +899,15 @@ input:checked + .slider::before { transform: translateX(12px); }
         height: 100vh;
         max-height: 100vh;
         padding: 0.3rem 0.4rem;
-        gap: 0.25rem;
+        gap: 0.15rem;
         justify-content: space-between;
         overflow: hidden;
     }
 
-    /* 📱 移动端 1 行超紧凑顶栏 */
+    /* 📱 移动端顶栏：折叠平铺选项，仅保留单个 ⚙️ 设置按钮 */
+    .desktop-header-controls { display: none !important; }
+    .mobile-settings-btn { display: inline-flex !important; font-size: 0.72rem; padding: 0.2rem 0.5rem; }
+
     .game-header {
         height: 38px;
         min-height: 38px;
@@ -887,76 +926,67 @@ input:checked + .slider::before { transform: translateX(12px); }
     .player-name { display: none; }
     .score-num { font-size: 0.9rem; width: 12px; }
 
-    .turn-indicator { width: 100px; flex: 0 0 100px; height: 26px; font-size: 0.65rem; border-radius: 8px; }
+    .turn-indicator { width: 95px; flex: 0 0 95px; height: 26px; font-size: 0.65rem; border-radius: 8px; }
 
-    .header-actions { gap: 0.2rem; }
-    .select-label { display: none; }
-    .custom-select { font-size: 0.68rem; padding: 0.15rem 0.25rem; border-radius: 6px; }
-    .btn { font-size: 0.68rem; padding: 0.2rem 0.4rem; border-radius: 6px; }
-    
-    .toggle-switch .toggle-label { display: none; }
-    .slider { width: 24px; height: 14px; }
-    .slider::before { width: 8px; height: 8px; top: 3px; left: 3px; }
-    input:checked + .slider::before { transform: translateX(10px); }
-
-    .mobile-log-btn { display: inline-flex; }
     .desktop-only-log { display: none !important; }
-    .desktop-only-key { display: none !important; } /* 📱 手机端隐藏快捷键 R 描述 */
+    .desktop-only-key { display: none !important; }
 
     /* 📱 移动端主视图框架 */
     .game-layout {
         height: auto;
         flex: 1;
         justify-content: space-between;
-        gap: 0.25rem;
+        gap: 0.15rem;
     }
 
-    /* 📱 AI 手牌区 */
+    /* 📱 AI 手牌区：维持 90:124 比例 */
     .hand-section.ai-hand-section {
-        height: 64px;
-        flex: 0 0 64px;
+        height: 68px;
+        flex: 0 0 68px;
         padding: 0.2rem 0.4rem;
         border-radius: 10px;
     }
 
-    .ai-hand-section .section-title { font-size: 0.68rem; }
-    .hand-container { height: 44px; flex: 0 0 44px; gap: 0.3rem; }
+    .ai-hand-section .section-title { font-size: 0.65rem; }
+    .hand-container { height: 48px; flex: 0 0 48px; gap: 0.35rem; }
 
     .ai-hand-section .hand-slot-placeholder,
     .ai-hand-section .card-wrapper {
-        height: 44px;
+        height: 48px;
+        width: 35px; /* 维持 ~90:124 高宽比，绝不扁塌 */
     }
 
-    .ai-hand-section .pokeball-button { width: 18px; height: 18px; border-width: 2px; }
+    .ai-hand-section .pokeball-button { width: 16px; height: 18px; border-width: 2px; }
 
-    /* 📱 中央核心区：横向摸牌栏 + 正方形 4x4 棋盘 */
+    /* 📱 中央核心区：摸牌栏 + 1:1 严格正方形 4x4 棋盘 */
     .center-content-wrapper {
         flex-direction: column;
         height: auto;
         flex: 1;
         justify-content: center;
-        gap: 0.25rem;
+        gap: 0.15rem;
     }
 
     .deck-pile-section {
         width: 100%;
-        height: 24px;
-        min-height: 24px;
-        flex: 0 0 24px;
+        height: 22px;
+        min-height: 22px;
+        flex: 0 0 22px;
         flex-direction: row;
         padding: 0 0.5rem;
         border-radius: 8px;
         justify-content: space-between;
     }
 
-    .deck-pile-title { font-size: 0.72rem; }
+    .deck-pile-title { font-size: 0.7rem; }
     .deck-3d-stack { display: none; }
-    .deck-count-badge { font-size: 0.7rem; padding: 0.08rem 0.4rem; border-radius: 6px; }
-    .deck-count-badge span { font-size: 0.8rem; }
+    .deck-count-badge { font-size: 0.68rem; padding: 0.05rem 0.35rem; border-radius: 6px; }
+    .deck-count-badge span { font-size: 0.78rem; }
 
+    /* 4x4 棋盘严格 1:1 正方形 (aspect-ratio: 1 / 1) */
     .board-section {
-        width: min(calc(100vw - 1rem), calc(100vh - 300px));
-        height: min(calc(100vw - 1rem), calc(100vh - 300px));
+        width: min(calc(100vw - 0.8rem), calc(100vh - 290px));
+        height: min(calc(100vw - 0.8rem), calc(100vh - 290px));
         max-width: 360px;
         max-height: 360px;
         flex: 0 0 auto;
@@ -966,45 +996,47 @@ input:checked + .slider::before { transform: translateX(12px); }
     .board-container { width: 100%; height: 100%; }
 
     .board-grid {
-        padding: 0.35rem;
-        gap: 0.3rem;
+        padding: 0.3rem;
+        gap: 0.25rem;
         border-radius: 14px;
     }
 
+    .cell { aspect-ratio: 1 / 1 !important; }
     .cell .card-top-name-bar { display: none; }
 
     .cell .edge-badge { 
-        width: 20px; 
-        height: 20px; 
-        font-size: 0.68rem; 
+        width: 19px; 
+        height: 19px; 
+        font-size: 0.65rem; 
         border-radius: 5px; 
     }
 
-    .cell .edge-top { top: 2px; left: calc(50% - 10px); }
-    .cell .edge-right { right: 2px; top: calc(50% - 10px); }
-    .cell .edge-bottom { bottom: 2px; left: calc(50% - 10px); }
-    .cell .edge-left { left: 2px; top: calc(50% - 10px); }
+    .cell .edge-top { top: 2px; left: calc(50% - 9.5px); }
+    .cell .edge-right { right: 2px; top: calc(50% - 9.5px); }
+    .cell .edge-bottom { bottom: 2px; left: calc(50% - 9.5px); }
+    .cell .edge-left { left: 2px; top: calc(50% - 9.5px); }
     
-    .cell .card-sprite-container { width: 50px; height: 50px; }
-    .cell .card-sprite-img { width: 46px; height: 46px; }
+    .cell .card-sprite-container { width: 44px; height: 44px; }
+    .cell .card-sprite-img { width: 40px; height: 40px; }
 
-    /* 📱 玩家手牌区 */
+    /* 📱 玩家手牌区：维持 90:124 比例 */
     .hand-section.player-hand-section {
-        height: 108px;
-        flex: 0 0 108px;
+        height: 120px;
+        flex: 0 0 120px;
         padding: 0.25rem 0.4rem;
         border-radius: 10px;
     }
 
-    .player-hand-section .hand-controls { height: 22px; flex: 0 0 22px; }
+    .player-hand-section .hand-controls { height: 24px; flex: 0 0 24px; }
     .player-hand-section .section-title { font-size: 0.68rem; }
-    .player-hand-section .btn-action { font-size: 0.68rem; padding: 0.18rem 0.45rem; }
+    .player-hand-section .btn-action { font-size: 0.68rem; padding: 0.2rem 0.5rem; }
 
-    .player-hand-section .hand-container { height: 75px; flex: 0 0 75px; }
+    .player-hand-section .hand-container { height: 85px; flex: 0 0 85px; gap: 0.4rem; }
 
     .player-hand-section .hand-slot-placeholder,
     .player-hand-section .card-wrapper {
-        height: 75px;
+        height: 85px;
+        width: 61px; /* 严格维持 ~90:124 标准立牌比例！绝不被压扁 */
     }
 
     .player-hand-section .card-top-name-bar { font-size: 0.58rem; padding: 0.05rem; }
@@ -1013,8 +1045,8 @@ input:checked + .slider::before { transform: translateX(12px); }
     .player-hand-section .edge-right { right: 1px; top: calc(50% - 8.5px); }
     .player-hand-section .edge-bottom { bottom: 1px; left: calc(50% - 8.5px); }
     .player-hand-section .edge-left { left: 1px; top: calc(50% - 8.5px); }
-    .player-hand-section .card-sprite-container { width: 34px; height: 34px; }
-    .player-hand-section .card-sprite-img { width: 30px; height: 30px; }
+    .player-hand-section .card-sprite-container { width: 38px; height: 38px; }
+    .player-hand-section .card-sprite-img { width: 34px; height: 34px; }
 
     /* 📱 底部法则图谱 */
     .elements-legend {

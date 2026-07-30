@@ -1,5 +1,5 @@
 /**
- * 五行旋转牌 (Five Elements Rotational Cards) - Core Game Engine (触屏双击预测确认落子版)
+ * 五行旋转牌 (Five Elements Rotational Cards) - Core Game Engine (点击灰色遮罩外侧退出弹窗版)
  */
 
 const ELEMENTS_DEFINITIONS = {
@@ -553,6 +553,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const logListEl = document.getElementById('log-list');
     const btnClearLog = document.getElementById('btn-clear-log');
     const elementsLegendEl = document.getElementById('elements-legend');
+
+    // ⚙️ 手机端折叠设置抽屉节点
+    const btnOpenMobileSettings = document.getElementById('btn-open-mobile-settings');
+    const mobileSettingsModalEl = document.getElementById('mobile-settings-modal');
+    const btnCloseMobileSettings = document.getElementById('btn-close-mobile-settings');
+    const btnCloseMobileSettingsConfirm = document.getElementById('btn-close-mobile-settings-confirm');
+    const btnModalOpenRules = document.getElementById('btn-modal-open-rules');
+    const btnModalOpenLog = document.getElementById('btn-modal-open-log');
+    const selectElementModeMobile = document.getElementById('select-element-mode-mobile');
+    const selectFirstPlayerMobile = document.getElementById('select-first-player-mobile');
+    const toggleComboMobile = document.getElementById('toggle-combo-mobile');
+    const btnModalRestart = document.getElementById('btn-modal-restart');
     
     // 📖 规则书弹窗节点
     const rulebookModalEl = document.getElementById('rulebook-modal');
@@ -560,7 +572,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnUnderstood = document.getElementById('btn-understood');
 
     // 📜 手机日志弹窗节点
-    const btnOpenLogModal = document.getElementById('btn-open-log-modal');
     const mobileLogModalEl = document.getElementById('mobile-log-modal');
     const btnCloseLogModal = document.getElementById('btn-close-log-modal');
     const btnCloseLogModalConfirm = document.getElementById('btn-close-log-modal-confirm');
@@ -575,11 +586,79 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initGameFlow();
 
-    // 📜 手机日志弹窗交互
-    btnOpenLogModal.addEventListener('click', () => {
+    // 🌟 所有弹窗遮罩背景点击退出绑定 (Backdrop Click to Dismiss)
+    [rulebookModalEl, mobileSettingsModalEl, mobileLogModalEl, modalEl].forEach(modal => {
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+        }
+    });
+
+    // ⚙️ 手机端折叠设置弹窗交互
+    btnOpenMobileSettings.addEventListener('click', () => {
+        selectElementModeMobile.value = game.displayMode;
+        selectFirstPlayerMobile.value = game.firstPlayerChoice;
+        toggleComboMobile.checked = game.enableCombo;
+        mobileSettingsModalEl.classList.remove('hidden');
+    });
+
+    btnCloseMobileSettings.addEventListener('click', () => {
+        mobileSettingsModalEl.classList.add('hidden');
+    });
+
+    btnCloseMobileSettingsConfirm.addEventListener('click', () => {
+        mobileSettingsModalEl.classList.add('hidden');
+    });
+
+    btnModalOpenRules.addEventListener('click', () => {
+        mobileSettingsModalEl.classList.add('hidden');
+        rulebookModalEl.classList.remove('hidden');
+    });
+
+    btnModalOpenLog.addEventListener('click', () => {
+        mobileSettingsModalEl.classList.add('hidden');
         mobileLogModalEl.classList.remove('hidden');
     });
 
+    selectElementModeMobile.addEventListener('change', (e) => {
+        selectElementModeEl.value = e.target.value;
+        game.displayMode = e.target.value;
+        const msg = game.displayMode === 'number' ? '🔢 已切换至数字模式 (大压小 5克4克3克2克1克5)' : '☯️ 已切换至五行模式 (木火土金水)';
+        showBanner(msg);
+        addLogEntry(msg, 'system');
+        render();
+    });
+
+    selectFirstPlayerMobile.addEventListener('change', (e) => {
+        selectFirstPlayerEl.value = e.target.value;
+        game.firstPlayerChoice = e.target.value;
+        const logMsg = `⚙️ 游戏重置，先后手调整为：${selectFirstPlayerEl.options[selectFirstPlayerEl.selectedIndex].text}`;
+        logListEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
+        mobileLogListContainerEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
+        mobileSettingsModalEl.classList.add('hidden');
+        initGameFlow();
+    });
+
+    toggleComboMobile.addEventListener('change', (e) => {
+        toggleComboEl.checked = e.target.checked;
+        game.enableCombo = e.target.checked;
+        const msg = game.enableCombo ? '⚡ 连锁翻牌模式已开启' : '🛑 连锁翻牌模式已关闭';
+        showBanner(msg);
+        addLogEntry(msg, 'system');
+    });
+
+    btnModalRestart.addEventListener('click', () => {
+        mobileSettingsModalEl.classList.add('hidden');
+        const logMsg = '☯️ 新游戏开始！准备进行开局发牌仪式...';
+        logListEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
+        mobileLogListContainerEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
+        initGameFlow();
+    });
+
+    // 📜 手机日志弹窗交互
     btnCloseLogModal.addEventListener('click', () => {
         mobileLogModalEl.classList.add('hidden');
     });
@@ -593,7 +672,7 @@ document.addEventListener('DOMContentLoaded', () => {
         mobileLogListContainerEl.innerHTML = '<div class="log-entry log-system">📜 历史日志已清空。</div>';
     });
 
-    // 🔢 模式切换绑定 (五行 / 数字大压小 5克4克3克2克1克5)
+    // 🔢 桌面模式切换绑定 (五行 / 数字大压小 5克4克3克2克1克5)
     selectElementModeEl.addEventListener('change', (e) => {
         game.displayMode = e.target.value;
         const msg = game.displayMode === 'number' ? '🔢 已切换至数字模式 (相克: 大压小 5克4克3克2克1克5)' : '☯️ 已切换至五行模式 (木火土金水)';
@@ -673,7 +752,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function rotateSelectedCard() {
         if (game.selectedCardIndex !== null && game.currentTurn === 1 && !game.isProcessingAnim) {
             game.selectedCardRotation = (game.selectedCardRotation + 1) % 4;
-            game.targetedCell = null; // 旋转卡牌时重置选定目标
+            game.targetedCell = null;
             game.previewState = null;
             renderPlayerHand();
             renderBoard();
@@ -867,7 +946,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         cellEl.classList.add('targeted-cell-active');
                     }
                     
-                    // 桌面 Hover 预判
                     cellEl.addEventListener('mouseenter', () => {
                         if (game.selectedCardIndex !== null && game.currentTurn === 1 && !game.targetedCell) {
                             const card = game.p1Hand[game.selectedCardIndex];
@@ -883,7 +961,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
 
-                    // 📱 触屏 2-Step 双击/点击落子处理
                     cellEl.addEventListener('click', () => handleCellClick(r, c));
                 }
 
@@ -970,7 +1047,6 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleCellClick(r, c) {
         if (game.selectedCardIndex === null || game.currentTurn !== 1 || game.isProcessingAnim) return;
 
-        // 📱 触屏 2-Step 交互：如果点击的不是当前选定的格子，则先进行预判选定
         const isAlreadyTargeted = game.targetedCell && game.targetedCell.r === r && game.targetedCell.c === c;
 
         if (!isAlreadyTargeted) {
@@ -980,7 +1056,6 @@ document.addEventListener('DOMContentLoaded', () => {
             applyPreviewUI(r, c);
             renderBoard();
         } else {
-            // 🎯 第二次点击同一个格子：确认执行落子！
             const success = await game.executeTurnPlacement(
                 r, c, game.selectedCardIndex, game.selectedCardRotation,
                 (msg, owner) => {
@@ -1038,7 +1113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             game.selectedCardIndex = slot;
                             game.selectedCardRotation = 0;
                         }
-                        game.targetedCell = null; // 重新切手牌时清空选定目标
+                        game.targetedCell = null;
                         game.previewState = null;
                         btnRotate.disabled = false;
                         render();
