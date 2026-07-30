@@ -1,5 +1,5 @@
 /**
- * 五行旋转牌 (Five Elements Rotational Cards) - Named Battle Logs and Mobile UI Game Engine
+ * 精灵翻翻阵 - Named Battle Logs and Mobile UI Game Engine
  */
 
 const ELEMENTS_DEFINITIONS = {
@@ -154,7 +154,8 @@ class GameEngine {
     }
 
     formatLogName(name, owner) {
-        return `<span class="log-name log-name-p${owner}">${name}</span>`;
+        const ownerName = owner === 1 ? '玩家' : this.getAIStyleMeta().name;
+        return `<span class="log-name log-name-p${owner}">${name}[${ownerName}]</span>`;
     }
 
     formatLogElement(element) {
@@ -167,7 +168,7 @@ class GameEngine {
 
     formatLogActor(owner) {
         const name = owner === 1 ? '玩家' : this.getAIStyleMeta().name;
-        return this.formatLogName(name, owner);
+        return `<span class="log-name log-name-p${owner}">${name}</span>`;
     }
 
     async performOpeningDeal(renderCallback, triggerDrawAnimCallback, onLogMsg) {
@@ -350,8 +351,7 @@ class GameEngine {
         this.board[r][c] = boardCell;
         this.totalPlaced++;
 
-        const playerTag = activeOwner === 1 ? '玩家' : this.getAIStyleMeta().name;
-        const actorLogName = this.formatLogName(playerTag, activeOwner);
+        const actorLogName = this.formatLogActor(activeOwner);
         const cardLogName = this.formatLogName(card.name, activeOwner);
         const firstShieldText = isFirstCardOfGame
             ? `，${cardLogName}获得${this.formatLogShield()}（先手）`
@@ -1134,7 +1134,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showBanner(msg) {
-        combatBannerEl.textContent = msg;
+        const richTextContainer = document.createElement('div');
+        richTextContainer.innerHTML = msg;
+        combatBannerEl.textContent = richTextContainer.textContent || '';
         combatBannerEl.classList.remove('hidden');
         setTimeout(() => {
             if (!game.isProcessingAnim) combatBannerEl.classList.add('hidden');
