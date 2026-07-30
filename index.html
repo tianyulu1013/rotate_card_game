@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>五行旋转牌 - Five Elements Rotational Cards</title>
     <!-- 使用版本化文件名，兼容简单静态服务器并绕过手机浏览器缓存 -->
-    <link rel="stylesheet" href="index.avatars-v6.css">
+    <link rel="stylesheet" href="index.logs-v7.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
@@ -117,6 +117,12 @@
                     </div>
                     <div class="deck-count-badge">余 <span id="deck-remaining">20</span> 张</div>
                 </aside>
+
+                <button id="mobile-latest-log" class="mobile-latest-log" type="button" aria-label="打开完整战况日志">
+                    <span class="mobile-latest-log-icon">📜</span>
+                    <span id="mobile-latest-log-text" class="mobile-latest-log-text">等待第一步……</span>
+                    <span class="mobile-latest-log-arrow">›</span>
+                </button>
 
                 <!-- 4x4 正方形棋盘区 (严格 1:1 比例绝不压扁) -->
                 <section class="board-section">
@@ -338,6 +344,6 @@
         </div>
     </div>
 
-    <script src="game.avatars-v6.js"></script>
+    <script src="game.logs-v7.js"></script>
 </body>
 </html>

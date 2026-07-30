@@ -1,5 +1,5 @@
 /**
- * 五行旋转牌 (Five Elements Rotational Cards) - AI Avatars, Rules, and Mobile UI Game Engine
+ * 五行旋转牌 (Five Elements Rotational Cards) - Named Battle Logs and Mobile UI Game Engine
  */
 
 const ELEMENTS_DEFINITIONS = {
@@ -151,6 +151,23 @@ class GameEngine {
 
     getAIStyleMeta() {
         return AI_STYLE_DEFINITIONS[this.activeAIStyle] || AI_STYLE_DEFINITIONS.fighter;
+    }
+
+    formatLogName(name, owner) {
+        return `<span class="log-name log-name-p${owner}">${name}</span>`;
+    }
+
+    formatLogElement(element) {
+        return `<span class="log-element log-element-${element}">${this.getElemName(element)}</span>`;
+    }
+
+    formatLogShield() {
+        return '<span class="shield-icon log-shield-icon" aria-label="护盾">🛡️</span>';
+    }
+
+    formatLogActor(owner) {
+        const name = owner === 1 ? '玩家' : this.getAIStyleMeta().name;
+        return this.formatLogName(name, owner);
     }
 
     async performOpeningDeal(renderCallback, triggerDrawAnimCallback, onLogMsg) {
@@ -334,7 +351,12 @@ class GameEngine {
         this.totalPlaced++;
 
         const playerTag = activeOwner === 1 ? '玩家' : this.getAIStyleMeta().name;
-        onLogMsg(`🃏 ${playerTag} 打出 [${card.name}] 落子于 (${r+1}, ${c+1})${isFirstCardOfGame ? ' 🛡️ [先手特权: 附带神圣护盾]' : ''}`, activeOwner);
+        const actorLogName = this.formatLogName(playerTag, activeOwner);
+        const cardLogName = this.formatLogName(card.name, activeOwner);
+        const firstShieldText = isFirstCardOfGame
+            ? `，${cardLogName}获得${this.formatLogShield()}（先手）`
+            : '';
+        onLogMsg(`🃏 ${actorLogName}打出${cardLogName}，落在第 ${r+1} 行第 ${c+1} 列${firstShieldText}。`, activeOwner);
         renderCallback();
 
         const chainQueue = [{ r, c }];
@@ -380,7 +402,12 @@ class GameEngine {
                             (stepCount === 1 || this.enableGenerationCombo)
                         ) {
                             if (doesGenerate(dir.myEdge, targetEdgeVal) && !targetCell.hasShield) {
-                                onLogMsg(`🌟 [${this.getElemName(dir.myEdge)}生${this.getElemName(targetEdgeVal)}] 正在为友军 (${nr+1},${nc+1}) 输送护盾！`, activeOwner);
+                                const sourceName = this.formatLogName(sourceCell.card.name, sourceCell.owner);
+                                const targetName = this.formatLogName(targetCell.card.name, targetCell.owner);
+                                onLogMsg(
+                                    `🌟 ${sourceName}的${this.formatLogElement(dir.myEdge)}生${targetName}的${this.formatLogElement(targetEdgeVal)}，${targetName}获得${this.formatLogShield()}。`,
+                                    activeOwner
+                                );
                                 if (triggerShieldBeamCallback) {
                                     await triggerShieldBeamCallback(pos.r, pos.c, nr, nc);
                                 }
@@ -389,7 +416,12 @@ class GameEngine {
                                 await this.sleep(400);
                             }
                             if (doesGenerate(targetEdgeVal, dir.myEdge) && !sourceCell.hasShield) {
-                                onLogMsg(`🌟 [${this.getElemName(targetEdgeVal)}生${this.getElemName(dir.myEdge)}] 友军正在为本牌 (${pos.r+1},${pos.c+1}) 输送护盾！`, activeOwner);
+                                const sourceName = this.formatLogName(targetCell.card.name, targetCell.owner);
+                                const targetName = this.formatLogName(sourceCell.card.name, sourceCell.owner);
+                                onLogMsg(
+                                    `🌟 ${sourceName}的${this.formatLogElement(targetEdgeVal)}生${targetName}的${this.formatLogElement(dir.myEdge)}，${targetName}获得${this.formatLogShield()}。`,
+                                    activeOwner
+                                );
                                 if (triggerShieldBeamCallback) {
                                     await triggerShieldBeamCallback(nr, nc, pos.r, pos.c);
                                 }
@@ -400,10 +432,16 @@ class GameEngine {
                         }
                         else if (targetCell.owner !== sourceCell.owner) {
                             if (doesOvercome(dir.myEdge, targetEdgeVal)) {
+                                const sourceName = this.formatLogName(sourceCell.card.name, sourceCell.owner);
+                                const targetOwnerBeforeEffect = targetCell.owner;
+                                const targetName = this.formatLogName(targetCell.card.name, targetOwnerBeforeEffect);
                                 if (targetCell.hasShield) {
                                     targetCell.hasShield = false;
                                     targetCell.shieldBreakAnim = true;
-                                    onLogMsg(`🛡️ [护盾抵挡] 敌牌 (${nr+1},${nc+1}) 护盾破碎！`, activeOwner);
+                                    onLogMsg(
+                                        `🛡️ ${sourceName}的${this.formatLogElement(dir.myEdge)}克${targetName}的${this.formatLogElement(targetEdgeVal)}，${targetName}的${this.formatLogShield()}挡下攻击并破碎。`,
+                                        activeOwner
+                                    );
                                     renderCallback();
                                     await this.sleep(1000);
                                     targetCell.shieldBreakAnim = false;
@@ -414,7 +452,10 @@ class GameEngine {
                                     targetCell.justFlipped = true;
 
                                     const isCombo = stepCount > 1;
-                                    onLogMsg(`${isCombo ? '💥 连锁反应！' : '⚔️ '}[${this.getElemName(dir.myEdge)}克${this.getElemName(targetEdgeVal)}] 卡牌 (${nr+1},${nc+1}) 被克翻转 180°！`, activeOwner);
+                                    onLogMsg(
+                                        `${isCombo ? '💥 连锁：' : '⚔️ '}${sourceName}的${this.formatLogElement(dir.myEdge)}克${targetName}的${this.formatLogElement(targetEdgeVal)}，${targetName}被翻转，加入${this.formatLogActor(sourceCell.owner)}。`,
+                                        activeOwner
+                                    );
                                     
                                     renderCallback();
                                     await this.sleep(1000);
@@ -440,7 +481,6 @@ class GameEngine {
             }
             const drawnCard = this.deck.pop();
             hand[cardIndex] = drawnCard;
-            onLogMsg(`🎴 ${playerTag} 从牌堆中补充抽取了 1 张新牌！`, activeOwner);
         }
 
         this.checkGameOver();
@@ -742,6 +782,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCloseLogModalConfirm = document.getElementById('btn-close-log-modal-confirm');
     const btnClearLogMobile = document.getElementById('btn-clear-log-mobile');
     const mobileLogListContainerEl = document.getElementById('mobile-log-list-container');
+    const mobileLatestLogEl = document.getElementById('mobile-latest-log');
+    const mobileLatestLogTextEl = document.getElementById('mobile-latest-log-text');
 
     // 结算弹窗节点
     const modalEl = document.getElementById('game-modal');
@@ -809,6 +851,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnModalOpenLog.addEventListener('click', () => {
         hideModal(mobileSettingsModalEl);
+        showModal(mobileLogModalEl);
+    });
+
+    mobileLatestLogEl.addEventListener('click', () => {
         showModal(mobileLogModalEl);
     });
 
@@ -952,6 +998,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function initGameFlow() {
         game.resetGame();
+        mobileLatestLogEl.className = 'mobile-latest-log';
+        mobileLatestLogTextEl.textContent = '等待第一步……';
         render();
         const aiStyle = game.getAIStyleMeta();
         addLogEntry(`🤖 本局对手：${aiStyle.icon} ${aiStyle.name}`, 'system');
@@ -1069,7 +1117,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (ownerType === 2) cls = 'log-p2';
 
         entry.className = `log-entry ${cls}`;
-        entry.textContent = text;
+        entry.innerHTML = text;
 
         const mobileEntry = entry.cloneNode(true);
 
@@ -1078,6 +1126,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         mobileLogListContainerEl.appendChild(mobileEntry);
         mobileLogListContainerEl.scrollTop = mobileLogListContainerEl.scrollHeight;
+
+        if (ownerType === 1 || ownerType === 2) {
+            mobileLatestLogEl.className = `mobile-latest-log log-p${ownerType}`;
+            mobileLatestLogTextEl.innerHTML = text;
+        }
     }
 
     function showBanner(msg) {
@@ -1213,17 +1266,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!game.previewState) return;
 
         const outcome = game.previewState;
-        let msg = `🔮 [预判选定]: `;
+        let msg = `🔮 放置：`;
         const parts = [];
         if (outcome.maxChainLevel > 1) parts.push(`触发 ${outcome.maxChainLevel} 级连锁`);
         if (outcome.flipCells.length > 0) parts.push(`翻转 ${outcome.flipCells.length} 张敌牌`);
-        if (outcome.shieldCells.length > 0) parts.push(`加持 ${outcome.shieldCells.length} 个护盾`);
+        if (outcome.shieldCells.length > 0) parts.push(`加盾 ${outcome.shieldCells.length} 张`);
         if (outcome.breakCells.length > 0) parts.push(`击碎 ${outcome.breakCells.length} 个敌方护盾`);
 
-        if (parts.length === 0) msg += `平局无改变`;
-        else msg += parts.join('，');
+        if (game.totalPlaced === 0) parts.unshift('获得先手护盾');
+        if (parts.length === 0) msg += `无额外效果`;
+        else msg += parts.join(' · ');
 
-        msg += ` (再次点击确认落子)`;
+        msg += `（再次点击确认）`;
 
         showBanner(msg);
         applyPreviewUIState();

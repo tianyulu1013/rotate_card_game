@@ -1,4 +1,4 @@
-/* 浅色高质感设计系统（AI 头像、透明圣盾与手机界面版） */
+/* 浅色高质感设计系统（角色头像、彩色战况日志与手机界面版） */
 :root {
     --bg-light: #f8fafc;
     --bg-card: #ffffff;
@@ -12,15 +12,15 @@
     --p1-light: #eff6ff;
     --p1-glow: rgba(37, 99, 235, 0.28);
     
-    --p2-red: #dc2626;
+    --p2-red: #e11d48;
     --p2-light: #fef2f2;
     --p2-glow: rgba(220, 38, 38, 0.28);
     
     /* 五行元素主题色 */
     --elem-metal: #b45309;
     --elem-wood: #047857;
-    --elem-water: #0284c7;
-    --elem-fire: #be123c;
+    --elem-water: #0ea5e9;
+    --elem-fire: #f97316;
     --elem-earth: #854d0e;
 
     --font-main: 'Outfit', 'Noto Sans SC', sans-serif;
@@ -426,6 +426,35 @@ input:checked + .slider::before { transform: translateX(12px); }
 .log-entry.log-p1 { border-left: 3px solid var(--p1-blue); background: #f0f7ff; }
 .log-entry.log-p2 { border-left: 3px solid var(--p2-red); background: #fff5f5; }
 .log-entry.log-system { border-left: 3px solid #8b5cf6; background: #f5f3ff; color: #6b21a8; font-weight: 600; }
+
+.log-name {
+    font-weight: 800;
+    white-space: nowrap;
+}
+.log-name-p1 { color: #1d4ed8; }
+.log-name-p2 { color: #e11d48; }
+.log-element {
+    font-weight: 700;
+    white-space: nowrap;
+}
+.log-element-0 { color: var(--elem-wood); }
+.log-element-1 { color: var(--elem-fire); }
+.log-element-2 { color: var(--elem-earth); }
+.log-element-3 { color: var(--elem-metal); }
+.log-element-4 { color: var(--elem-water); }
+.shield-icon.log-shield-icon {
+    position: static;
+    display: inline-flex;
+    width: 18px;
+    height: 18px;
+    font-size: 0.72rem;
+    vertical-align: -0.25em;
+    z-index: auto;
+    pointer-events: auto;
+    animation: none;
+}
+
+.mobile-latest-log { display: none; }
 
 .combat-banner {
     position: absolute;
@@ -1103,6 +1132,47 @@ input:checked + .slider::before { transform: translateX(12px); }
     .deck-3d-stack { display: none; }
     .deck-count-badge { font-size: 0.68rem; padding: 0.05rem 0.35rem; border-radius: 6px; }
     .deck-count-badge span { font-size: 0.78rem; }
+
+    .mobile-latest-log {
+        width: 100%;
+        min-width: 0;
+        height: 28px;
+        flex: 0 0 28px;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.15rem 0.45rem;
+        border: 1px solid #dbe3ef;
+        border-left: 3px solid #8b5cf6;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.96);
+        color: var(--text-secondary);
+        font-family: var(--font-main);
+        font-size: 0.65rem;
+        text-align: left;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+        cursor: pointer;
+    }
+    .mobile-latest-log.log-p1 { border-left-color: var(--p1-blue); }
+    .mobile-latest-log.log-p2 { border-left-color: var(--p2-red); }
+    .mobile-latest-log-icon,
+    .mobile-latest-log-arrow { flex: 0 0 auto; }
+    .mobile-latest-log-arrow {
+        margin-left: auto;
+        color: #94a3b8;
+        font-size: 0.9rem;
+    }
+    .mobile-latest-log-text {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .mobile-latest-log .log-shield-icon {
+        width: 16px;
+        height: 16px;
+        font-size: 0.62rem;
+    }
 
     .board-section {
         flex: 1 1 auto;
