@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>正在打开精灵翻翻阵</title>
+</head>
+<body>
+    <p>正在载入最新版本……</p>
+    <script>
+        (async () => {
+            const cacheBuster = Date.now();
+            try {
+                const response = await fetch(`version.json?t=${cacheBuster}`, {
+                    cache: 'no-store'
+                });
+                if (!response.ok) throw new Error('版本信息读取失败');
+                const { version } = await response.json();
+                window.location.replace(`index.html?v=${encodeURIComponent(version)}`);
+            } catch (error) {
+                window.location.replace(`index.html?v=${cacheBuster}`);
+            }
+        })();
+    </script>
+</body>
+</html>
