@@ -553,6 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const logListEl = document.getElementById('log-list');
     const btnClearLog = document.getElementById('btn-clear-log');
     const elementsLegendEl = document.getElementById('elements-legend');
+    const mobileElementsLegendEl = document.getElementById('mobile-elements-legend');
 
     // ⚙️ 手机端折叠设置抽屉节点
     const btnOpenMobileSettings = document.getElementById('btn-open-mobile-settings');
@@ -885,8 +886,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderLegend() {
+        let legendHtml;
         if (game.displayMode === 'number') {
-            elementsLegendEl.innerHTML = `
+            legendHtml = `
                 <div class="legend-row">
                     <span class="legend-label">⚔️ 相克 (大压小):</span>
                     <span class="elem-tag elem-earth">5</span><span class="arrow">→</span>
@@ -907,7 +909,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
         } else {
-            elementsLegendEl.innerHTML = `
+            legendHtml = `
                 <div class="legend-row">
                     <span class="legend-label">🌟 相生图谱 (护盾):</span>
                     <span class="elem-tag elem-wood">🌿木</span><span class="arrow">→</span>
@@ -928,6 +930,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
         }
+
+        elementsLegendEl.innerHTML = legendHtml;
+        mobileElementsLegendEl.innerHTML = legendHtml;
     }
 
     function renderBoard() {

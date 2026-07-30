@@ -740,6 +740,10 @@ input:checked + .slider::before { transform: translateX(12px); }
     overflow: hidden;
 }
 
+.mobile-inline-legend {
+    display: none;
+}
+
 .legend-row {
     display: flex;
     align-items: center;
@@ -878,9 +882,12 @@ input:checked + .slider::before { transform: translateX(12px); }
 @media (max-width: 768px) {
     html, body {
         overflow: hidden !important;
-        height: 100vh !important;
-        position: fixed;
         width: 100vw;
+        height: 100vh !important;
+        height: 100dvh !important;
+        min-height: 100vh;
+        min-height: 100dvh;
+        position: relative;
     }
 
     body {
@@ -891,8 +898,13 @@ input:checked + .slider::before { transform: translateX(12px); }
     .app-container {
         width: 100vw;
         height: 100vh;
+        height: 100dvh;
         max-height: 100vh;
-        padding: 0.3rem 0.4rem;
+        max-height: 100dvh;
+        padding:
+            max(0.3rem, env(safe-area-inset-top))
+            0.4rem
+            max(0.3rem, env(safe-area-inset-bottom));
         gap: 0.3rem;
         display: flex;
         flex-direction: column;
@@ -941,9 +953,17 @@ input:checked + .slider::before { transform: translateX(12px); }
         height: auto;
         padding: 0.25rem 0.4rem;
         border-radius: 10px;
+        display: grid;
+        grid-template-columns: 132px minmax(0, 1fr);
+        grid-template-rows: auto 62px;
+        column-gap: 0.35rem;
     }
 
-    .ai-hand-section .section-title { font-size: 0.65rem; margin-bottom: 0.15rem; }
+    .ai-hand-section .section-title {
+        grid-column: 1 / -1;
+        font-size: 0.65rem;
+        margin-bottom: 0.15rem;
+    }
     .hand-container {
         height: auto;
         flex: 0 0 auto;
@@ -957,25 +977,61 @@ input:checked + .slider::before { transform: translateX(12px); }
 
     .ai-hand-section .hand-container {
         display: flex;
-        justify-content: center;
+        justify-content: flex-start;
         align-items: flex-end;
-        height: 72px;
+        width: 132px;
+        height: 62px;
         gap: 0;
     }
 
     .ai-hand-section .hand-slot-placeholder,
     .ai-hand-section .card-wrapper {
-        flex: 0 0 52px;
-        width: 52px;
-        height: 72px;
+        flex: 0 0 42px;
+        width: 42px;
+        height: 58px;
         aspect-ratio: 90 / 124;
     }
 
     .ai-hand-section .hand-container > * + * {
-        margin-left: -14px;
+        margin-left: -20px;
     }
 
-    .ai-hand-section .pokeball-button { width: 16px; height: 18px; border-width: 2px; }
+    .ai-hand-section .pokeball-button { width: 12px; height: 14px; border-width: 2px; }
+
+    .mobile-inline-legend {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.2rem;
+        overflow: hidden;
+    }
+
+    .mobile-inline-legend .legend-row {
+        justify-content: flex-start;
+        gap: 0.1rem;
+        font-size: 0.5rem;
+    }
+
+    .mobile-inline-legend .legend-label {
+        width: 34px;
+        flex: 0 0 34px;
+        font-size: 0.5rem;
+        text-align: left;
+        overflow: hidden;
+        text-overflow: clip;
+    }
+
+    .mobile-inline-legend .elem-tag {
+        min-width: 0;
+        padding: 0.02rem 0.1rem;
+        font-size: 0.52rem;
+        border-radius: 4px;
+    }
+
+    .mobile-inline-legend .arrow {
+        font-size: 0.5rem;
+    }
 
     .center-content-wrapper {
         flex: 1 1 auto;
@@ -1012,10 +1068,11 @@ input:checked + .slider::before { transform: translateX(12px); }
     }
 
     .board-container {
-        width: min(calc(100vw - 1rem), calc(100dvh - 370px));
-        height: min(calc(100vw - 1rem), calc(100dvh - 370px));
-        max-width: 380px;
-        max-height: 380px;
+        width: auto;
+        height: 100%;
+        max-width: min(380px, calc(100vw - 1rem));
+        max-height: 100%;
+        aspect-ratio: 1 / 1;
     }
 
     .board-grid {
@@ -1076,11 +1133,7 @@ input:checked + .slider::before { transform: translateX(12px); }
     .player-hand-section .card-sprite-img { width: 34px; height: 34px; }
 
     .elements-legend {
-        flex: 0 0 auto;
-        height: auto;
-        min-height: 28px;
-        padding: 0.15rem 0.3rem;
-        border-radius: 8px;
+        display: none;
     }
 
     .legend-row { font-size: 0.65rem; gap: 0.2rem; }
