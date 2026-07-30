@@ -1,8 +1,8 @@
-/* 浅色高质感设计系统 (Light Theme Design System - 顶栏全控件 100% 完全展现版) */
+/* 浅色高质感设计系统 (Light Theme Design System - 桌面+移动端 100% 响应式自适应版) */
 :root {
     --bg-light: #f8fafc;
     --bg-card: #ffffff;
-    --bg-glass: rgba(255, 255, 255, 0.9);
+    --bg-glass: rgba(255, 255, 255, 0.92);
     --border-glass: rgba(203, 213, 225, 0.7);
     --text-primary: #0f172a;
     --text-secondary: #475569;
@@ -31,13 +31,13 @@
     margin: 0;
     padding: 0;
     user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 html, body {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    scrollbar-gutter: stable;
 }
 
 body {
@@ -86,7 +86,9 @@ body {
 
 .app-container {
     width: 1100px;
+    max-width: 100vw;
     height: 960px;
+    max-height: 100vh;
     display: flex;
     flex-direction: column;
     padding: 0.6rem;
@@ -94,7 +96,7 @@ body {
     flex-shrink: 0;
 }
 
-/* 🔒 顶栏超清防裁切响应式 Flex 布局 */
+/* 🔒 顶栏 Flex 布局 */
 .game-header {
     height: 56px;
     width: 100%;
@@ -109,15 +111,9 @@ body {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     flex: 0 0 56px;
     gap: 0.25rem;
-    overflow: visible;
 }
 
-.logo { 
-    display: flex; 
-    align-items: center; 
-    gap: 0.25rem; 
-    flex: 0 0 auto; 
-}
+.logo { display: flex; align-items: center; gap: 0.25rem; flex: 0 0 auto; }
 .logo-icon { font-size: 1.35rem; }
 .logo h1 { font-size: 0.95rem; font-weight: 800; color: #1e293b; white-space: nowrap; }
 
@@ -141,7 +137,6 @@ body {
 .player-name { font-size: 0.72rem; color: var(--text-secondary); font-weight: 600; white-space: nowrap; }
 .score-num { font-size: 1rem; font-weight: 800; color: var(--text-primary); width: 14px; text-align: center; }
 
-/* 锁定回合指示器固宽 150px */
 .turn-indicator {
     width: 150px;
     height: 30px;
@@ -258,11 +253,7 @@ input:checked + .slider::before { transform: translateX(12px); }
     flex: 0 0 140px;
 }
 
-.deck-pile-title {
-    font-size: 0.85rem;
-    font-weight: 800;
-    color: var(--text-primary);
-}
+.deck-pile-title { font-size: 0.85rem; font-weight: 800; color: var(--text-primary); }
 
 .deck-3d-stack {
     position: relative;
@@ -314,10 +305,7 @@ input:checked + .slider::before { transform: translateX(12px); }
     box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
 
-.deck-count-badge span {
-    color: var(--p1-blue);
-    font-size: 1rem;
-}
+.deck-count-badge span { color: var(--p1-blue); font-size: 1rem; }
 
 /* 🚀 摸牌飞向手牌的动画 */
 .drawing-fly-card {
@@ -717,6 +705,7 @@ input:checked + .slider::before { transform: translateX(12px); }
 .elem-3 { color: var(--elem-metal); border-color: var(--elem-metal); background: #fefce8; }
 .elem-4 { color: var(--elem-water); border-color: var(--elem-water); background: #e0f2fe; }
 
+/* ☯️ / 🔢 底部法则图谱 */
 .elements-legend {
     height: 58px;
     width: 100%;
@@ -782,11 +771,7 @@ input:checked + .slider::before { transform: translateX(12px); }
     border-bottom: 1.5px solid #e2e8f0;
 }
 
-.rulebook-header h2 {
-    font-size: 1.15rem;
-    font-weight: 800;
-    color: var(--text-primary);
-}
+.rulebook-header h2 { font-size: 1.15rem; font-weight: 800; color: var(--text-primary); }
 
 .btn-close {
     background: none;
@@ -811,20 +796,9 @@ input:checked + .slider::before { transform: translateX(12px); }
     line-height: 1.6;
 }
 
-.rule-section h3 {
-    font-size: 0.95rem;
-    font-weight: 800;
-    color: #1e293b;
-    margin-bottom: 0.4rem;
-}
+.rule-section h3 { font-size: 0.95rem; font-weight: 800; color: #1e293b; margin-bottom: 0.4rem; }
 
-.rule-highlight {
-    padding: 0.5rem 0.75rem;
-    border-radius: 10px;
-    font-size: 0.82rem;
-    margin: 0.4rem 0;
-}
-
+.rule-highlight { padding: 0.5rem 0.75rem; border-radius: 10px; font-size: 0.82rem; margin: 0.4rem 0; }
 .overcome-bg { background: #fff1f2; border: 1px solid #fecaca; color: #991b1b; }
 .generate-bg { background: #fefce8; border: 1px solid #fef08a; color: #854d0e; }
 
@@ -851,3 +825,158 @@ input:checked + .slider::before { transform: translateX(12px); }
 .modal-card { background: #ffffff; border: 1px solid #cbd5e1; border-radius: 20px; padding: 2rem; text-align: center; width: 320px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15); }
 .modal-card h2 { font-size: 1.5rem; margin-bottom: 1rem; color: var(--text-primary); }
 .modal-content { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.6; }
+
+
+/* ==========================================================================
+   📱 移动端 100% 响应式自适应适配 (@media max-width: 768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+    html, body {
+        overflow-y: auto !important;
+        height: auto !important;
+        min-height: 100vh;
+    }
+
+    body {
+        align-items: flex-start;
+        padding: 0;
+    }
+
+    .app-container {
+        width: 100vw;
+        height: auto;
+        max-height: none;
+        padding: 0.4rem;
+        gap: 0.4rem;
+    }
+
+    /* 📱 移动端顶栏：两行精致布局 */
+    .game-header {
+        height: auto;
+        flex-direction: column;
+        padding: 0.5rem;
+        gap: 0.4rem;
+    }
+
+    .logo h1 { font-size: 0.9rem; }
+    .status-bar { width: 100%; justify-content: space-between; }
+    .turn-indicator { width: 130px; flex: 0 0 130px; font-size: 0.7rem; }
+
+    .header-actions {
+        width: 100%;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+    }
+
+    .custom-select { font-size: 0.72rem; padding: 0.15rem 0.3rem; }
+    .btn { font-size: 0.72rem; padding: 0.25rem 0.45rem; }
+
+    /* 📱 移动端主界面布局 */
+    .game-layout {
+        height: auto;
+        flex: none;
+        gap: 0.4rem;
+    }
+
+    .hand-section {
+        height: 135px;
+        flex: 0 0 135px;
+        padding: 0.4rem 0.5rem;
+    }
+
+    .hand-container {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 0.3rem;
+        height: 95px;
+        flex: 0 0 95px;
+    }
+
+    .hand-slot-placeholder,
+    .hand-container .card-wrapper {
+        width: 100%;
+        height: 95px;
+    }
+
+    /* 手牌卡牌在移动端的缩放调节 */
+    .hand-container .card-top-name-bar { font-size: 0.6rem; padding: 0.05rem; }
+    .hand-container .edge-badge { width: 20px; height: 20px; font-size: 0.65rem; border-radius: 5px; }
+    .hand-container .edge-top { top: 2px; left: calc(50% - 10px); }
+    .hand-container .edge-right { right: 2px; top: calc(50% - 10px); }
+    .hand-container .edge-bottom { bottom: 2px; left: calc(50% - 10px); }
+    .hand-container .edge-left { left: 2px; top: calc(50% - 10px); }
+    .hand-container .card-sprite-container { width: 42px; height: 42px; }
+    .hand-container .card-sprite-img { width: 38px; height: 38px; }
+
+    /* 📱 移动端中央核心区：竖排 (摸牌堆 + 4x4 棋盘 + 日志) */
+    .center-content-wrapper {
+        flex-direction: column;
+        height: auto;
+        flex: none;
+        gap: 0.4rem;
+    }
+
+    /* 摸牌堆在移动端横向紧凑展示 */
+    .deck-pile-section {
+        width: 100%;
+        height: 48px;
+        flex: 0 0 48px;
+        flex-direction: row;
+        padding: 0 1rem;
+        border-radius: 12px;
+    }
+
+    .deck-3d-stack { display: none; } /* 移动端省空间隐藏 3D 抓牌堆动画，仅保留剩余计数量 */
+
+    /* 4x4 棋盘移动端适配 */
+    .board-section {
+        width: 100%;
+        height: calc(100vw - 1rem);
+        max-width: 420px;
+        max-height: 420px;
+        flex: none;
+        margin: 0 auto;
+    }
+
+    .board-container {
+        width: 100%;
+        height: 100%;
+    }
+
+    .board-grid {
+        padding: 0.4rem;
+        gap: 0.35rem;
+        border-radius: 16px;
+    }
+
+    .cell .edge-badge { width: 22px; height: 22px; font-size: 0.7rem; border-radius: 5px; }
+    .cell .edge-top { top: 2px; left: calc(50% - 11px); }
+    .cell .edge-right { right: 2px; top: calc(50% - 11px); }
+    .cell .edge-bottom { bottom: 2px; left: calc(50% - 11px); }
+    .cell .edge-left { left: 2px; top: calc(50% - 11px); }
+    .cell .card-sprite-container { width: 48px; height: 48px; }
+    .cell .card-sprite-img { width: 44px; height: 44px; }
+
+    /* 日志面板移动端定高折叠 */
+    .combat-log-section {
+        width: 100%;
+        height: 120px;
+        flex: 0 0 120px;
+        border-radius: 12px;
+        padding: 0.5rem;
+    }
+
+    /* 底部法则栏移动端字号缩微 */
+    .elements-legend {
+        height: auto;
+        min-height: 52px;
+        flex: none;
+        padding: 0.3rem 0.4rem;
+    }
+
+    .legend-row { font-size: 0.68rem; gap: 0.25rem; }
+    .legend-label { width: 110px; flex: 0 0 110px; font-size: 0.68rem; }
+    .elem-tag { font-size: 0.72rem; padding: 0.05rem 0.35rem; }
+
+    .rulebook-card { width: 92vw; }
+}
