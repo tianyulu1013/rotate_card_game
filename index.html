@@ -59,10 +59,18 @@
                     <div class="header-select-group">
                         <span class="select-label">对手:</span>
                         <select id="select-ai-style" class="custom-select">
-                            <option value="random">🎲 随机</option>
-                            <option value="fighter">🌊 小霞</option>
-                            <option value="fortress">🪨 小刚</option>
-                            <option value="combo">⚡ 小智</option>
+                            <option value="random">🎲 入门随机</option>
+                            <optgroup label="入门对手">
+                                <option value="meowth">🐾 喵喵</option>
+                                <option value="psyduck">🦆 可达鸭</option>
+                                <option value="eevee">🦊 伊布</option>
+                            </optgroup>
+                            <optgroup label="高级对手">
+                                <option value="advanced-random">🎲 高级随机</option>
+                                <option value="misty">🌊 小霞</option>
+                                <option value="brock">🪨 小刚</option>
+                                <option value="ash">⚡ 小智</option>
+                            </optgroup>
                         </select>
                     </div>
 
@@ -93,16 +101,21 @@
         <main class="game-layout">
             <!-- AI 手牌区 -->
             <section class="hand-section ai-hand-section">
-                <div class="section-title" id="ai-hand-title">对手手牌</div>
+                <div class="section-title ai-hand-header">
+                    <span id="ai-hand-title">对手手牌</span>
+                    <span id="mobile-deck-count" class="mobile-deck-count" aria-label="摸牌堆剩余20张">
+                        🎴 <span id="mobile-deck-remaining">20</span>
+                    </span>
+                </div>
                 <div class="hand-container" id="ai-hand">
                     <!-- 动态生成 AI 5张手牌 -->
                 </div>
                 <div class="mobile-inline-legend" id="mobile-elements-legend"></div>
             </section>
 
-            <!-- 中央核心区 (摸牌堆提示条 + 1:1正方形棋盘 + 桌面侧边日志) -->
+            <!-- 中央核心区 (桌面摸牌堆 + 1:1正方形棋盘 + 桌面侧边日志) -->
             <div class="center-content-wrapper">
-                <!-- 🎴 摸牌堆 (桌面3D stack / 手机横向状态条) -->
+                <!-- 🎴 桌面3D摸牌堆；手机端只在对手手牌标题显示剩余数量 -->
                 <aside class="deck-pile-section">
                     <div class="deck-pile-title">🎴 摸牌堆</div>
                     <div class="deck-3d-stack" id="deck-stack">
@@ -152,7 +165,7 @@
                 <div class="hand-controls">
                     <span class="section-title">玩家手牌</span>
                     <div class="rotate-control-group">
-                        <span class="mobile-rotate-hint">点击卡牌旋转</span>
+                        <span id="mobile-rotate-hint" class="mobile-rotate-hint">点牌选择</span>
                         <button id="btn-rotate" class="btn btn-action" disabled>
                             <span class="icon">🔄</span> <span class="rotate-text-main">旋转 90°</span><span class="desktop-only-key"> (快捷键 R)</span>
                         </button>
@@ -211,10 +224,18 @@
                     <div class="settings-item-row">
                         <span class="setting-label">选择对手:</span>
                         <select id="select-ai-style-mobile" class="custom-select select-mobile-full">
-                            <option value="random">🎲 随机</option>
-                            <option value="fighter">🌊 小霞</option>
-                            <option value="fortress">🪨 小刚</option>
-                            <option value="combo">⚡ 小智</option>
+                            <option value="random">🎲 入门随机</option>
+                            <optgroup label="入门对手">
+                                <option value="meowth">🐾 喵喵</option>
+                                <option value="psyduck">🦆 可达鸭</option>
+                                <option value="eevee">🦊 伊布</option>
+                            </optgroup>
+                            <optgroup label="高级对手">
+                                <option value="advanced-random">🎲 高级随机</option>
+                                <option value="misty">🌊 小霞</option>
+                                <option value="brock">🪨 小刚</option>
+                                <option value="ash">⚡ 小智</option>
+                            </optgroup>
                         </select>
                     </div>
 
@@ -283,7 +304,7 @@
                     <div class="rule-section">
                         <h3>🗺️ 2. 落子与护盾</h3>
                         <p>▪ 可以在棋盘任意空格落子。</p>
-                        <p>▪ 全场第一张打出的卡牌自动获得【神圣护盾 <span class="shield-icon rule-shield-icon" aria-label="护盾">🛡️</span>】。</p>
+                        <p>▪ 全场第一张打出的卡牌自动获得【神圣护盾 <span class="shield-icon rule-shield-icon" aria-label="护盾"></span>】。</p>
                         <p>▪ 护盾只有 <b>1 层</b>，重复相生不会叠加层数。</p>
                         <p>▪ 护盾抵挡一次有效相克后破碎；该次攻击不会改变卡牌归属，也不会让卡牌旋转。</p>
                         <p>▪ <b>手机预判落子</b>：点击第 1 下选定预览翻牌与加盾，再次点击同一格子确认落子。</p>
@@ -306,7 +327,7 @@
                             <b>🌟 五行模式：木生火 → 火生土 → 土生金 → 金生水 → 水生木</b><br>
                             <b>🔢 数字模式 (隔位生)：1生3 → 3生5 → 5生2 → 2生4 → 4生1</b>
                         </div>
-                        <p>主动落子与己方卡牌接触时，会检查接触边的两个方向；形成相生后，<b>被生的一方</b>获得【护盾 <span class="shield-icon rule-shield-icon" aria-label="护盾">🛡️</span>】。</p>
+                        <p>主动落子与己方卡牌接触时，会检查接触边的两个方向；形成相生后，<b>被生的一方</b>获得【护盾 <span class="shield-icon rule-shield-icon" aria-label="护盾"></span>】。</p>
                         <p>▪ 相生只发生在<b>同一阵营</b>之间，不会给敌牌授盾。</p>
                         <p>▪ 每张牌最多持有 1 层护盾；已有护盾的牌不会继续叠盾。</p>
                     </div>

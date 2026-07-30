@@ -11,24 +11,46 @@ const ELEMENTS_DEFINITIONS = {
 };
 
 const AI_STYLE_DEFINITIONS = {
-    fighter: {
+    meowth: {
+        name: '喵喵',
+        icon: '🐾',
+        avatarUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/52.png'
+    },
+    psyduck: {
+        name: '可达鸭',
+        icon: '🦆',
+        avatarUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/54.png'
+    },
+    eevee: {
+        name: '伊布',
+        icon: '🦊',
+        avatarUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/133.png'
+    },
+    misty: {
         name: '小霞',
         icon: '🌊',
-        avatarUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/121.png'
+        avatarUrl: 'assets/avatars/misty-official.png',
+        avatarType: 'trainer',
+        avatarPosition: '58% 22%'
     },
-    fortress: {
+    brock: {
         name: '小刚',
         icon: '🪨',
-        avatarUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/95.png'
+        avatarUrl: 'assets/avatars/brock-official.png',
+        avatarType: 'trainer',
+        avatarPosition: '58% 22%'
     },
-    combo: {
+    ash: {
         name: '小智',
         icon: '⚡',
-        avatarUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png'
+        avatarUrl: 'assets/avatars/ash-official.png',
+        avatarType: 'trainer',
+        avatarPosition: '55% 22%'
     }
 };
 
-const AI_STYLE_KEYS = Object.keys(AI_STYLE_DEFINITIONS);
+const BEGINNER_AI_STYLE_KEYS = ['meowth', 'psyduck', 'eevee'];
+const ADVANCED_AI_STYLE_KEYS = ['misty', 'brock', 'ash'];
 
 // 🎯 30 张卡牌与初代宝可梦 (Gen 1) 精准对应表
 const EXACT_30_CARDS_DEFINITIONS = [
@@ -105,7 +127,7 @@ class GameEngine {
         this.enableGenerationCombo = false;
         this.firstPlayerChoice = 'random';
         this.aiStyleChoice = 'random';
-        this.activeAIStyle = 'fighter';
+        this.activeAIStyle = 'meowth';
         this.displayMode = 'wuxing'; // 'wuxing' | 'number'
         this.isProcessingAnim = false;
         this.previewState = null;
@@ -127,9 +149,17 @@ class GameEngine {
             this.currentTurn = parseInt(this.firstPlayerChoice);
         }
 
-        this.activeAIStyle = this.aiStyleChoice === 'random'
-            ? AI_STYLE_KEYS[Math.floor(Math.random() * AI_STYLE_KEYS.length)]
-            : this.aiStyleChoice;
+        if (this.aiStyleChoice === 'random') {
+            this.activeAIStyle = BEGINNER_AI_STYLE_KEYS[
+                Math.floor(Math.random() * BEGINNER_AI_STYLE_KEYS.length)
+            ];
+        } else if (this.aiStyleChoice === 'advanced-random') {
+            this.activeAIStyle = ADVANCED_AI_STYLE_KEYS[
+                Math.floor(Math.random() * ADVANCED_AI_STYLE_KEYS.length)
+            ];
+        } else {
+            this.activeAIStyle = this.aiStyleChoice;
+        }
 
         this.selectedCardIndex = null;
         this.selectedCardRotation = 0;
@@ -150,7 +180,7 @@ class GameEngine {
     }
 
     getAIStyleMeta() {
-        return AI_STYLE_DEFINITIONS[this.activeAIStyle] || AI_STYLE_DEFINITIONS.fighter;
+        return AI_STYLE_DEFINITIONS[this.activeAIStyle] || AI_STYLE_DEFINITIONS.meowth;
     }
 
     formatLogName(name, owner) {
@@ -163,7 +193,7 @@ class GameEngine {
     }
 
     formatLogShield() {
-        return '<span class="shield-icon log-shield-icon" aria-label="护盾">🛡️</span>';
+        return '<span class="shield-icon log-shield-icon" aria-label="护盾"></span>';
     }
 
     formatLogActor(owner) {
@@ -579,6 +609,14 @@ class GameEngine {
         const isIsolated = friendlyLinks === 0 && enemyContacts === 0;
         const uniqueElements = new Set(card.edges).size;
         const phase = this.totalPlaced < 5 ? 'opening' : (this.totalPlaced < 12 ? 'middle' : 'end');
+        const scores = this.getScores();
+        const remainingAfter = Math.max(0, 15 - this.totalPlaced);
+        const gapAfterPlacement = (scores.p2 + 1) - scores.p1;
+        const deficitAfterPlacement = Math.max(0, -gapAfterPlacement);
+        const boardProgress = Math.min(1, this.totalPlaced / 15);
+        const comebackPressure = deficitAfterPlacement === 0
+            ? 0
+            : Math.min(1, deficitAfterPlacement / 3 * 0.65 + boardProgress * 0.55);
 
         let shieldStrategicValue = 0;
         const uniqueShieldCells = new Set();
@@ -606,7 +644,9 @@ class GameEngine {
             isEdge,
             isIsolated,
             uniqueElements,
-            phase
+            phase,
+            remainingAfter,
+            comebackPressure
         };
     }
 
@@ -659,14 +699,17 @@ class GameEngine {
             isEdge,
             isIsolated,
             uniqueElements,
-            phase
+            phase,
+            remainingAfter,
+            comebackPressure
         } = features;
 
         const extraChainFlips = Math.max(0, totalChainFlips - directFlips);
         const phasePositionWeight = phase === 'opening' ? 1 : (phase === 'middle' ? 0.55 : 0.1);
         const endgameFlipBonus = phase === 'end' ? totalChainFlips * 9 : 0;
 
-        if (this.activeAIStyle === 'fortress') {
+        // 入门AI：保留鲜明且可被玩家利用的单一性格。
+        if (this.activeAIStyle === 'psyduck') {
             return (
                 directFlips * 7 +
                 extraChainFlips * 6 +
@@ -681,7 +724,7 @@ class GameEngine {
             );
         }
 
-        if (this.activeAIStyle === 'combo') {
+        if (this.activeAIStyle === 'eevee') {
             return (
                 directFlips * 9 +
                 extraChainFlips * 18 +
@@ -695,14 +738,83 @@ class GameEngine {
             );
         }
 
-        return (
-            directFlips * 15 +
-            directShieldBreaks * 8 +
-            shieldsGranted * 6 +
-            extraChainFlips * 5 +
-            (isCorner && isIsolated ? 3 : 0) +
-            endgameFlipBonus
-        );
+        if (this.activeAIStyle === 'meowth') {
+            return (
+                directFlips * 15 +
+                directShieldBreaks * 8 +
+                shieldsGranted * 3 +
+                extraChainFlips * 4 +
+                enemyContacts * 5 +
+                (isIsolated ? -4 : 0) +
+                endgameFlipBonus
+            );
+        }
+
+        // 高级AI在最后一手严格服从实际翻牌收益，角色偏好不再凌驾于胜负。
+        if (remainingAfter === 0) {
+            return totalChainFlips * 1000;
+        }
+
+        if (this.activeAIStyle === 'misty') {
+            return (
+                totalChainFlips * 15 +
+                directFlips * 3 +
+                totalShieldBreaks * 8 +
+                shieldsGranted * 2 +
+                shieldStrategicValue * 0.5 +
+                enemyContacts * 0.75 -
+                emptyExposure * 0.5 +
+                endgameFlipBonus
+            );
+        }
+
+        if (this.activeAIStyle === 'brock') {
+            const shieldPackage = Math.min(
+                18,
+                shieldsGranted * 4 + shieldStrategicValue * 2.25
+            );
+            const defensiveScore = (
+                directFlips * 9 +
+                extraChainFlips * 8 +
+                totalShieldBreaks * 5 +
+                shieldPackage +
+                friendlyLinks * 1.5 +
+                (isCorner ? 8 : (isEdge ? 4 : 0)) * phasePositionWeight -
+                emptyExposure * (phase === 'opening' ? 1.75 : 0.9) -
+                (phase === 'opening' ? uniqueElements * 0.5 : 0) +
+                endgameFlipBonus
+            );
+            const counterattackScore = (
+                totalChainFlips * 16 +
+                directFlips * 2 +
+                totalShieldBreaks * 8 +
+                shieldsGranted * 1.5 +
+                shieldStrategicValue * 0.75 +
+                friendlyLinks +
+                (isCorner ? 3 : (isEdge ? 1.5 : 0)) -
+                emptyExposure * 0.4 +
+                endgameFlipBonus
+            );
+
+            return defensiveScore * (1 - comebackPressure) +
+                   counterattackScore * comebackPressure;
+        }
+
+        if (this.activeAIStyle === 'ash') {
+            return (
+                totalChainFlips * 14 +
+                extraChainFlips * 3 +
+                Math.max(0, maxChainLevel - 1) +
+                totalShieldBreaks * 7 +
+                shieldsGranted * 2 +
+                shieldStrategicValue * 0.75 +
+                enemyContacts * 0.5 -
+                emptyExposure * 0.4 +
+                endgameFlipBonus
+            );
+        }
+
+        return totalChainFlips * 10 + directShieldBreaks * 5;
     }
 
     checkGameOver() {
@@ -734,6 +846,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const game = new GameEngine();
 
     const boardGridEl = document.getElementById('board-grid');
+    const boardSectionEl = document.querySelector('.board-section');
+    const boardContainerEl = document.querySelector('.board-container');
     const playerHandEl = document.getElementById('player-hand');
     const aiHandEl = document.getElementById('ai-hand');
     const deckStackEl = document.getElementById('deck-stack');
@@ -743,7 +857,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const aiStyleLabelEl = document.getElementById('ai-style-label');
     const aiHandTitleEl = document.getElementById('ai-hand-title');
     const deckRemainingEl = document.getElementById('deck-remaining');
+    const mobileDeckCountEl = document.getElementById('mobile-deck-count');
+    const mobileDeckRemainingEl = document.getElementById('mobile-deck-remaining');
     const btnRotate = document.getElementById('btn-rotate');
+    const mobileRotateHintEl = document.getElementById('mobile-rotate-hint');
     const btnRestart = document.getElementById('btn-restart');
     const btnOpenRules = document.getElementById('btn-open-rules');
     const selectElementModeEl = document.getElementById('select-element-mode');
@@ -790,17 +907,46 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalTitleEl = document.getElementById('modal-title');
     const modalBodyEl = document.getElementById('modal-body');
     const modalBtnRestart = document.getElementById('modal-btn-restart');
+    const rotateHintStorageKey = 'flipcard.rotateHintSeen.v1';
+    let rotateHintFeedbackActive = false;
+    let rotateHintFeedbackTimer = null;
 
     // 🔒 页面初始化：确保所有 Modal 弹窗均带有 hidden 类（网页端绝不默认开启规则书）
     [rulebookModalEl, mobileSettingsModalEl, mobileLogModalEl, modalEl].forEach(m => {
         if (m) m.classList.add('hidden');
     });
 
+    if (typeof ResizeObserver !== 'undefined') {
+        const boardResizeObserver = new ResizeObserver(() => fitMobileBoard());
+        boardResizeObserver.observe(boardSectionEl);
+    }
+    window.addEventListener('resize', fitMobileBoard);
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', fitMobileBoard);
+    }
+
     initGameFlow();
 
     // 🔒 通用关闭弹窗辅助函数（兼容 click 与 touchend）
     function hideModal(modal) {
         if (modal) modal.classList.add('hidden');
+    }
+
+    function fitMobileBoard() {
+        if (!boardSectionEl || !boardContainerEl) return;
+        if (!window.matchMedia('(max-width: 768px)').matches) {
+            boardContainerEl.style.removeProperty('width');
+            boardContainerEl.style.removeProperty('height');
+            return;
+        }
+
+        const availableWidth = boardSectionEl.clientWidth;
+        const availableHeight = boardSectionEl.clientHeight;
+        const boardSize = Math.floor(Math.min(380, availableWidth, availableHeight));
+        if (boardSize <= 0) return;
+
+        boardContainerEl.style.width = `${boardSize}px`;
+        boardContainerEl.style.height = `${boardSize}px`;
     }
 
     function showModal(modal) {
@@ -987,9 +1133,12 @@ document.addEventListener('DOMContentLoaded', () => {
         selectAIStyleEl.value = choice;
         selectAIStyleMobile.value = choice;
 
-        const choiceText = choice === 'random'
-            ? '🎲 随机'
-            : `${AI_STYLE_DEFINITIONS[choice].icon} ${AI_STYLE_DEFINITIONS[choice].name}`;
+        const randomChoiceLabels = {
+            random: '🎲 入门随机',
+            'advanced-random': '🎲 高级随机'
+        };
+        const choiceText = randomChoiceLabels[choice]
+            || `${AI_STYLE_DEFINITIONS[choice].icon} ${AI_STYLE_DEFINITIONS[choice].name}`;
         const logMsg = `🤖 游戏重置，对手调整为：${choiceText}`;
         logListEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         mobileLogListContainerEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
@@ -998,9 +1147,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function initGameFlow() {
         game.resetGame();
+        rotateHintFeedbackActive = false;
+        if (rotateHintFeedbackTimer) {
+            clearTimeout(rotateHintFeedbackTimer);
+            rotateHintFeedbackTimer = null;
+        }
         mobileLatestLogEl.className = 'mobile-latest-log';
         mobileLatestLogTextEl.textContent = '等待第一步……';
         render();
+        requestAnimationFrame(fitMobileBoard);
         const aiStyle = game.getAIStyleMeta();
         addLogEntry(`🤖 本局对手：${aiStyle.icon} ${aiStyle.name}`, 'system');
         await game.performOpeningDeal(
@@ -1014,11 +1169,53 @@ document.addEventListener('DOMContentLoaded', () => {
         checkAIFirstTurn();
     }
 
+    function hasSeenRotateHint() {
+        try {
+            return localStorage.getItem(rotateHintStorageKey) === 'true';
+        } catch (error) {
+            return false;
+        }
+    }
+
+    function showRotateFeedback() {
+        if (!window.matchMedia('(max-width: 768px)').matches) return;
+        try {
+            localStorage.setItem(rotateHintStorageKey, 'true');
+        } catch (error) {
+            // 无痕模式或受限存储下仍保留本次会话提示，不阻塞游戏。
+        }
+
+        rotateHintFeedbackActive = true;
+        if (rotateHintFeedbackTimer) clearTimeout(rotateHintFeedbackTimer);
+        rotateHintFeedbackTimer = setTimeout(() => {
+            rotateHintFeedbackActive = false;
+            updateMobileRotateHint();
+        }, 1200);
+    }
+
+    function updateMobileRotateHint() {
+        if (!mobileRotateHintEl) return;
+        mobileRotateHintEl.classList.remove('is-teaching', 'is-success');
+
+        if (rotateHintFeedbackActive) {
+            mobileRotateHintEl.textContent = '✓ 已旋转90°';
+            mobileRotateHintEl.classList.add('is-success');
+        } else if (game.selectedCardIndex !== null && game.currentTurn === 1) {
+            mobileRotateHintEl.textContent = '↻ 再点此牌旋转';
+            if (!hasSeenRotateHint()) {
+                mobileRotateHintEl.classList.add('is-teaching');
+            }
+        } else {
+            mobileRotateHintEl.textContent = '点牌选择';
+        }
+    }
+
     function rotateSelectedCard() {
         if (game.selectedCardIndex !== null && game.currentTurn === 1 && !game.isProcessingAnim) {
             game.selectedCardRotation = (game.selectedCardRotation + 1) % 4;
             game.targetedCell = null;
             game.previewState = null;
+            showRotateFeedback();
             renderPlayerHand();
             renderBoard();
         }
@@ -1032,7 +1229,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function triggerDrawFlyingAnim(targetOwner, slotIdx = 0, durationMs = 180) {
         return new Promise(resolve => {
-            const stackRect = deckStackEl.getBoundingClientRect();
+            const drawOriginEl = (
+                window.matchMedia('(max-width: 768px)').matches &&
+                mobileDeckCountEl
+            ) ? mobileDeckCountEl : deckStackEl;
+            const stackRect = drawOriginEl.getBoundingClientRect();
             const targetContainer = targetOwner === 1 ? playerHandEl : aiHandEl;
             
             const slots = targetContainer.children;
@@ -1091,7 +1292,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const particle = document.createElement('div');
             particle.className = 'shield-beam-particle';
-            particle.textContent = '🛡️';
             particle.style.left = `${startX}px`;
             particle.style.top = `${startY}px`;
 
@@ -1153,6 +1353,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderLegend() {
         let legendHtml;
+        let mobileLegendHtml;
         if (game.displayMode === 'number') {
             legendHtml = `
                 <div class="legend-row">
@@ -1172,6 +1373,26 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="elem-tag elem-metal">2</span><span class="arrow">→</span>
                     <span class="elem-tag elem-water">4</span><span class="arrow">→</span>
                     <span class="elem-tag elem-wood">1</span>
+                </div>
+            `;
+            mobileLegendHtml = `
+                <div class="legend-row">
+                    <span class="legend-label">相生<span class="shield-icon mobile-legend-shield" aria-label="护盾"></span></span>
+                    <span class="elem-tag elem-wood">1</span><span class="arrow">→</span>
+                    <span class="elem-tag elem-fire">3</span><span class="arrow">→</span>
+                    <span class="elem-tag elem-earth">5</span><span class="arrow">→</span>
+                    <span class="elem-tag elem-metal">2</span><span class="arrow">→</span>
+                    <span class="elem-tag elem-water">4</span><span class="arrow">→</span>
+                    <span class="elem-tag elem-wood">1</span>
+                </div>
+                <div class="legend-row">
+                    <span class="legend-label">相克<span class="mobile-flip-icon" aria-label="翻牌">↻</span></span>
+                    <span class="elem-tag elem-earth">5</span><span class="arrow">→</span>
+                    <span class="elem-tag elem-water">4</span><span class="arrow">→</span>
+                    <span class="elem-tag elem-fire">3</span><span class="arrow">→</span>
+                    <span class="elem-tag elem-metal">2</span><span class="arrow">→</span>
+                    <span class="elem-tag elem-wood">1</span><span class="arrow">→</span>
+                    <span class="elem-tag elem-earth">5</span>
                 </div>
             `;
         } else {
@@ -1195,10 +1416,30 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="elem-tag elem-wood">🌿木</span>
                 </div>
             `;
+            mobileLegendHtml = `
+                <div class="legend-row">
+                    <span class="legend-label">相生<span class="shield-icon mobile-legend-shield" aria-label="护盾"></span></span>
+                    <span class="elem-tag elem-wood">木</span><span class="arrow">→</span>
+                    <span class="elem-tag elem-fire">火</span><span class="arrow">→</span>
+                    <span class="elem-tag elem-earth">土</span><span class="arrow">→</span>
+                    <span class="elem-tag elem-metal">金</span><span class="arrow">→</span>
+                    <span class="elem-tag elem-water">水</span><span class="arrow">→</span>
+                    <span class="elem-tag elem-wood">木</span>
+                </div>
+                <div class="legend-row">
+                    <span class="legend-label">相克<span class="mobile-flip-icon" aria-label="翻牌">↻</span></span>
+                    <span class="elem-tag elem-wood">木</span><span class="arrow">→</span>
+                    <span class="elem-tag elem-earth">土</span><span class="arrow">→</span>
+                    <span class="elem-tag elem-water">水</span><span class="arrow">→</span>
+                    <span class="elem-tag elem-fire">火</span><span class="arrow">→</span>
+                    <span class="elem-tag elem-metal">金</span><span class="arrow">→</span>
+                    <span class="elem-tag elem-wood">木</span>
+                </div>
+            `;
         }
 
         elementsLegendEl.innerHTML = legendHtml;
-        mobileElementsLegendEl.innerHTML = legendHtml;
+        mobileElementsLegendEl.innerHTML = mobileLegendHtml;
     }
 
     function renderBoard() {
@@ -1381,11 +1622,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const cardEl = createCardDOM(card, 1, rotation, false, true);
                 wrapper.appendChild(cardEl);
+                if (isSelected) {
+                    const rotateAffordance = document.createElement('span');
+                    rotateAffordance.className = 'mobile-card-rotate-affordance';
+                    rotateAffordance.textContent = '↻';
+                    wrapper.appendChild(rotateAffordance);
+                }
 
                 wrapper.addEventListener('click', () => {
                     if (game.currentTurn === 1 && !game.isProcessingAnim) {
                         if (game.selectedCardIndex === slot) {
                             game.selectedCardRotation = (game.selectedCardRotation + 1) % 4;
+                            showRotateFeedback();
                         } else {
                             game.selectedCardIndex = slot;
                             game.selectedCardRotation = 0;
@@ -1406,6 +1654,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         btnRotate.disabled = (game.selectedCardIndex === null || game.currentTurn !== 1 || game.isProcessingAnim);
+        updateMobileRotateHint();
     }
 
     function renderAIHand() {
@@ -1439,10 +1688,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const aiStyle = game.getAIStyleMeta();
         p1ScoreEl.textContent = scores.p1;
         p2ScoreEl.textContent = scores.p2;
-        const avatarHtml = `<img class="ai-avatar" src="${aiStyle.avatarUrl}" alt="${aiStyle.name}头像">`;
+        const avatarClass = aiStyle.avatarType === 'trainer' ? ' ai-avatar--trainer' : '';
+        const avatarStyle = aiStyle.avatarPosition
+            ? ` style="object-position:${aiStyle.avatarPosition}"`
+            : '';
+        const avatarHtml = `<img class="ai-avatar${avatarClass}" src="${aiStyle.avatarUrl}" alt="${aiStyle.name}头像"${avatarStyle}>`;
         aiStyleLabelEl.innerHTML = `${avatarHtml}<span>${aiStyle.name}</span>`;
         aiHandTitleEl.innerHTML = `${avatarHtml}<span>${aiStyle.name} 手牌</span>`;
         deckRemainingEl.textContent = game.deck.length;
+        mobileDeckRemainingEl.textContent = game.deck.length;
+        mobileDeckCountEl.setAttribute('aria-label', `摸牌堆剩余${game.deck.length}张`);
 
         if (game.gameOver) {
             showEndGameModal(scores);
@@ -1458,7 +1713,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cardEl.innerHTML = `
             ${isHand ? `<div class="card-top-name-bar">${card.name}</div>` : ''}
             <div class="card-body-content">
-                ${hasShield ? '<div class="shield-icon">🛡️</div>' : ''}
+                ${hasShield ? '<div class="shield-icon" aria-label="护盾"></div>' : ''}
                 <div class="edge-badge edge-top ${ELEMENTS_DEFINITIONS[activeEdges.top].color}">${game.getElemName(activeEdges.top)}</div>
                 <div class="edge-badge edge-right ${ELEMENTS_DEFINITIONS[activeEdges.right].color}">${game.getElemName(activeEdges.right)}</div>
                 <div class="edge-badge edge-bottom ${ELEMENTS_DEFINITIONS[activeEdges.bottom].color}">${game.getElemName(activeEdges.bottom)}</div>
