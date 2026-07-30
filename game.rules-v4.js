@@ -1,5 +1,5 @@
 /**
- * 五行旋转牌 (Five Elements Rotational Cards) - AI Styles Game Engine
+ * 五行旋转牌 (Five Elements Rotational Cards) - AI Styles and Rules Game Engine
  */
 
 const ELEMENTS_DEFINITIONS = {
@@ -282,7 +282,7 @@ class GameEngine {
                                 }
                             }
                         }
-                        else if (targetCell.owner === sourceCell.owner) {
+                        else if (targetCell.owner === sourceCell.owner && stepCount === 1) {
                             if (doesGenerate(dir.myEdge, targetEdgeVal) && !targetCell.hasShield) {
                                 targetCell.hasShield = true;
                                 shieldCells.push({ r: nr, c: nc });
@@ -371,7 +371,7 @@ class GameEngine {
                         const targetEdges = this.getEffectiveEdges(targetCell.card, targetCell.orientation);
                         const targetEdgeVal = targetEdges[dir.theirDir];
 
-                        if (targetCell.owner === sourceCell.owner) {
+                        if (targetCell.owner === sourceCell.owner && stepCount === 1) {
                             if (doesGenerate(dir.myEdge, targetEdgeVal) && !targetCell.hasShield) {
                                 onLogMsg(`🌟 [${this.getElemName(dir.myEdge)}生${this.getElemName(targetEdgeVal)}] 正在为友军 (${nr+1},${nc+1}) 输送护盾！`, activeOwner);
                                 if (triggerShieldBeamCallback) {
@@ -411,16 +411,6 @@ class GameEngine {
                                     
                                     renderCallback();
                                     await this.sleep(1000);
-
-                                    if (doesGenerate(targetEdgeVal, dir.myEdge) && !sourceCell.hasShield) {
-                                        onLogMsg(`🌟 翻转牌滋养 [${this.getElemName(targetEdgeVal)}生${this.getElemName(dir.myEdge)}] 正在输送护盾！`, activeOwner);
-                                        if (triggerShieldBeamCallback) {
-                                            await triggerShieldBeamCallback(nr, nc, pos.r, pos.c);
-                                        }
-                                        sourceCell.hasShield = true;
-                                        renderCallback();
-                                        await this.sleep(400);
-                                    }
 
                                     const key = `${nr},${nc}`;
                                     if (!visitedThisTurn.has(key)) {

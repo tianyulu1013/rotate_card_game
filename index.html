@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>五行旋转牌 - Five Elements Rotational Cards</title>
     <!-- 使用版本化文件名，兼容简单静态服务器并绕过手机浏览器缓存 -->
-    <link rel="stylesheet" href="index.ai-v3.css">
+    <link rel="stylesheet" href="index.rules-v4.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
@@ -143,9 +143,12 @@
             <section class="hand-section player-hand-section">
                 <div class="hand-controls">
                     <span class="section-title">玩家手牌</span>
-                    <button id="btn-rotate" class="btn btn-action" disabled>
-                        <span class="icon">🔄</span> <span class="rotate-text-main">旋转 90°</span><span class="desktop-only-key"> (快捷键 R)</span>
-                    </button>
+                    <div class="rotate-control-group">
+                        <span class="mobile-rotate-hint">点击卡牌旋转</span>
+                        <button id="btn-rotate" class="btn btn-action" disabled>
+                            <span class="icon">🔄</span> <span class="rotate-text-main">旋转 90°</span><span class="desktop-only-key"> (快捷键 R)</span>
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="hand-container" id="player-hand">
@@ -264,6 +267,8 @@
                         <h3>🗺️ 2. 落子与护盾</h3>
                         <p>▪ 可以在棋盘任意空格落子。</p>
                         <p>▪ 全场第一张打出的卡牌自动获得【神圣护盾 🛡️】。</p>
+                        <p>▪ 护盾只有 <b>1 层</b>，重复相生不会叠加层数。</p>
+                        <p>▪ 护盾抵挡一次有效相克后破碎；该次攻击不会改变卡牌归属，也不会让卡牌旋转。</p>
                         <p>▪ <b>手机预判落子</b>：点击第 1 下选定预览翻牌与加盾，再次点击同一格子确认落子。</p>
                     </div>
 
@@ -273,7 +278,9 @@
                             <b>⚔️ 五行模式：木克土 → 土克水 → 水克火 → 火克金 → 金克木</b><br>
                             <b>🔢 数字模式 (大压小)：5克4 → 4克3 → 3克2 → 2克1 → 1克5</b>
                         </div>
-                        <p>当你的接触边相克敌方接触边时，敌方卡牌旋转 180° 并转换为你的卡牌。</p>
+                        <p>当你的接触边相克<b>敌方</b>接触边时，敌方卡牌旋转 180° 并转换为你的卡牌。</p>
+                        <p>▪ <b>相克永远不会翻转己方阵营的牌</b>。己方牌接触时只检查相生。</p>
+                        <p>▪ 没有形成相克关系的敌我接触不会产生任何效果。</p>
                     </div>
 
                     <div class="rule-section">
@@ -282,12 +289,24 @@
                             <b>🌟 五行模式：木生火 → 火生土 → 土生金 → 金生水 → 水生木</b><br>
                             <b>🔢 数字模式 (隔位生)：1生3 → 3生5 → 5生2 → 2生4 → 4生1</b>
                         </div>
-                        <p>当接触边触发相生时，<b>被生的一方</b>获得【护盾 🛡️】。护盾可抵挡一次相克翻牌。</p>
+                        <p>主动落子与己方卡牌接触时，会检查接触边的两个方向；形成相生后，<b>被生的一方</b>获得【护盾 🛡️】。</p>
+                        <p>▪ 相生只发生在<b>同一阵营</b>之间，不会给敌牌授盾。</p>
+                        <p>▪ 每张牌最多持有 1 层护盾；已有护盾的牌不会继续叠盾。</p>
                     </div>
 
                     <div class="rule-section">
                         <h3>💥 5. 连锁反应</h3>
-                        <p>刚被翻转转换的卡牌，会继续对其相邻卡牌进行相克与相生判定。</p>
+                        <p>刚被相克翻转的卡牌，会以新阵营身份继续检查相邻的<b>敌方牌</b>，形成相克时继续翻转。</p>
+                        <p>▪ 连锁阶段<b>只继续相克，不再触发相生或产生新护盾</b>。</p>
+                        <p>▪ 遇到己方牌时不会翻牌；遇到护盾敌牌时只击碎护盾，连锁不会穿过该牌。</p>
+                        <p>▪ 关闭“连锁翻牌”后，只结算主动落子产生的第一层接触效果。</p>
+                    </div>
+
+                    <div class="rule-section">
+                        <h3>📋 6. 单条接触边判定顺序</h3>
+                        <p>① 先看阵营：己方接触只检查相生，敌方接触只检查相克。</p>
+                        <p>② 再看护盾：有效相克优先击碎护盾；无盾才会翻牌并转换阵营。</p>
+                        <p>③ 最后处理连锁：只有真正完成翻转的牌才成为下一层连锁来源。</p>
                     </div>
                 </div>
 
@@ -307,6 +326,6 @@
         </div>
     </div>
 
-    <script src="game.ai-v3.js"></script>
+    <script src="game.rules-v4.js"></script>
 </body>
 </html>
