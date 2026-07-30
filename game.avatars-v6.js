@@ -1,5 +1,5 @@
 /**
- * 五行旋转牌 (Five Elements Rotational Cards) - AI Styles, Rules, and Mobile UI Game Engine
+ * 五行旋转牌 (Five Elements Rotational Cards) - AI Avatars, Rules, and Mobile UI Game Engine
  */
 
 const ELEMENTS_DEFINITIONS = {
@@ -12,18 +12,21 @@ const ELEMENTS_DEFINITIONS = {
 
 const AI_STYLE_DEFINITIONS = {
     fighter: {
-        name: '斗士',
-        icon: '⚔️',
+        name: '小霞',
+        icon: '🌊',
+        avatarUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/121.png',
         description: '偏爱立即翻牌、破盾与贴身进攻'
     },
     fortress: {
-        name: '堡垒',
-        icon: '🛡️',
+        name: '小刚',
+        icon: '🪨',
+        avatarUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/95.png',
         description: '偏爱边角锚点、关键护盾与低暴露阵地'
     },
     combo: {
-        name: '机关师',
-        icon: '💥',
+        name: '小智',
+        icon: '⚡',
+        avatarUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png',
         description: '偏爱多面接触与完整连锁收益'
     }
 };
@@ -102,6 +105,7 @@ class GameEngine {
     constructor() {
         this.boardSize = 4;
         this.enableCombo = true;
+        this.enableGenerationCombo = false;
         this.firstPlayerChoice = 'random';
         this.aiStyleChoice = 'random';
         this.activeAIStyle = 'fighter';
@@ -282,7 +286,10 @@ class GameEngine {
                                 }
                             }
                         }
-                        else if (targetCell.owner === sourceCell.owner && stepCount === 1) {
+                        else if (
+                            targetCell.owner === sourceCell.owner &&
+                            (stepCount === 1 || this.enableGenerationCombo)
+                        ) {
                             if (doesGenerate(dir.myEdge, targetEdgeVal) && !targetCell.hasShield) {
                                 targetCell.hasShield = true;
                                 shieldCells.push({ r: nr, c: nc });
@@ -371,7 +378,10 @@ class GameEngine {
                         const targetEdges = this.getEffectiveEdges(targetCell.card, targetCell.orientation);
                         const targetEdgeVal = targetEdges[dir.theirDir];
 
-                        if (targetCell.owner === sourceCell.owner && stepCount === 1) {
+                        if (
+                            targetCell.owner === sourceCell.owner &&
+                            (stepCount === 1 || this.enableGenerationCombo)
+                        ) {
                             if (doesGenerate(dir.myEdge, targetEdgeVal) && !targetCell.hasShield) {
                                 onLogMsg(`🌟 [${this.getElemName(dir.myEdge)}生${this.getElemName(targetEdgeVal)}] 正在为友军 (${nr+1},${nc+1}) 输送护盾！`, activeOwner);
                                 if (triggerShieldBeamCallback) {
@@ -703,6 +713,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectFirstPlayerEl = document.getElementById('select-first-player');
     const selectAIStyleEl = document.getElementById('select-ai-style');
     const toggleComboEl = document.getElementById('toggle-combo');
+    const toggleGenerationComboEl = document.getElementById('toggle-generation-combo');
     const combatBannerEl = document.getElementById('combat-banner');
     const logListEl = document.getElementById('log-list');
     const btnClearLog = document.getElementById('btn-clear-log');
@@ -720,6 +731,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectFirstPlayerMobile = document.getElementById('select-first-player-mobile');
     const selectAIStyleMobile = document.getElementById('select-ai-style-mobile');
     const toggleComboMobile = document.getElementById('toggle-combo-mobile');
+    const toggleGenerationComboMobile = document.getElementById('toggle-generation-combo-mobile');
     const btnModalRestart = document.getElementById('btn-modal-restart');
     
     // 📖 规则书弹窗节点
@@ -789,6 +801,7 @@ document.addEventListener('DOMContentLoaded', () => {
         selectFirstPlayerMobile.value = game.firstPlayerChoice;
         selectAIStyleMobile.value = game.aiStyleChoice;
         toggleComboMobile.checked = game.enableCombo;
+        toggleGenerationComboMobile.checked = game.enableGenerationCombo;
         showModal(mobileSettingsModalEl);
     });
 
@@ -834,6 +847,16 @@ document.addEventListener('DOMContentLoaded', () => {
         addLogEntry(msg, 'system');
     });
 
+    toggleGenerationComboMobile.addEventListener('change', (e) => {
+        toggleGenerationComboEl.checked = e.target.checked;
+        game.enableGenerationCombo = e.target.checked;
+        const msg = game.enableGenerationCombo
+            ? '🌟 挑战规则：相生连锁已开启'
+            : '🛑 相生连锁已关闭';
+        showBanner(msg);
+        addLogEntry(msg, 'system');
+    });
+
     btnModalRestart.addEventListener('click', () => {
         hideModal(mobileSettingsModalEl);
         const logMsg = '☯️ 新游戏开始！准备进行开局发牌仪式...';
@@ -875,6 +898,16 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleComboEl.addEventListener('change', (e) => {
         game.enableCombo = e.target.checked;
         const msg = game.enableCombo ? '⚡ 连锁翻牌模式已开启' : '🛑 连锁翻牌模式已关闭';
+        showBanner(msg);
+        addLogEntry(msg, 'system');
+    });
+
+    toggleGenerationComboEl.addEventListener('change', (e) => {
+        toggleGenerationComboMobile.checked = e.target.checked;
+        game.enableGenerationCombo = e.target.checked;
+        const msg = game.enableGenerationCombo
+            ? '🌟 挑战规则：相生连锁已开启'
+            : '🛑 相生连锁已关闭';
         showBanner(msg);
         addLogEntry(msg, 'system');
     });
@@ -1353,8 +1386,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const aiStyle = game.getAIStyleMeta();
         p1ScoreEl.textContent = scores.p1;
         p2ScoreEl.textContent = scores.p2;
-        aiStyleLabelEl.textContent = `AI·${aiStyle.name}`;
-        aiHandTitleEl.textContent = `${aiStyle.icon} AI · ${aiStyle.name}`;
+        const avatarHtml = `<img class="ai-avatar" src="${aiStyle.avatarUrl}" alt="${aiStyle.name}头像">`;
+        aiStyleLabelEl.innerHTML = `${avatarHtml}<span>AI·${aiStyle.name}</span>`;
+        aiHandTitleEl.innerHTML = `${avatarHtml}<span>AI · ${aiStyle.name}</span>`;
         deckRemainingEl.textContent = game.deck.length;
 
         if (game.gameOver) {
