@@ -9,18 +9,16 @@
     <title>精灵翻翻阵</title>
     <script>
         (() => {
+            const pageVersion = '20260730-4';
             const url = new URL(window.location.href);
-            const requestedVersion = url.searchParams.get('v');
-            if (!requestedVersion) {
-                window.location.replace('play.html');
-                return;
+            if (url.searchParams.get('v') !== pageVersion) {
+                url.searchParams.set('v', pageVersion);
+                window.location.replace(url.toString());
             }
-            window.FLIPCARD_VERSION = requestedVersion;
-            document.write(
-                `<link rel="stylesheet" href="index.logs-v7.css?v=${encodeURIComponent(requestedVersion)}">`
-            );
         })();
     </script>
+    <!-- 使用版本化文件名，兼容简单静态服务器并绕过手机浏览器缓存 -->
+    <link rel="stylesheet" href="index.logs-v7.css?v=20260730-4">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
@@ -380,10 +378,6 @@
         </div>
     </div>
 
-    <script>
-        const gameScript = document.createElement('script');
-        gameScript.src = `game.logs-v7.js?v=${encodeURIComponent(window.FLIPCARD_VERSION || Date.now())}`;
-        document.body.appendChild(gameScript);
-    </script>
+    <script src="game.logs-v7.js?v=20260730-4"></script>
 </body>
 </html>
