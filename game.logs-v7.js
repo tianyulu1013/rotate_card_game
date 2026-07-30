@@ -31,21 +31,21 @@ const AI_STYLE_DEFINITIONS = {
         icon: '🌊',
         avatarUrl: 'assets/avatars/misty-official.png',
         avatarType: 'trainer',
-        avatarPosition: '58% 22%'
+        avatarPosition: '52% 16%'
     },
     brock: {
         name: '小刚',
         icon: '🪨',
         avatarUrl: 'assets/avatars/brock-official.png',
         avatarType: 'trainer',
-        avatarPosition: '58% 22%'
+        avatarPosition: '63% 14%'
     },
     ash: {
         name: '小智',
         icon: '⚡',
         avatarUrl: 'assets/avatars/ash-official.png',
         avatarType: 'trainer',
-        avatarPosition: '55% 22%'
+        avatarPosition: '57% 20%'
     }
 };
 
