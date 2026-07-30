@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>五行旋转牌 - Five Elements Rotational Cards</title>
     <!-- 使用版本化文件名，兼容简单静态服务器并绕过手机浏览器缓存 -->
-    <link rel="stylesheet" href="index.mobile-v2.css">
+    <link rel="stylesheet" href="index.ai-v3.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
@@ -35,7 +35,7 @@
 
                 <div class="player-score p2-score">
                     <span id="p2-card-count" class="score-num">0</span>
-                    <span class="player-name">AI</span>
+                    <span class="player-name" id="ai-style-label">AI</span>
                     <span class="player-dot p2-dot"></span>
                 </div>
             </div>
@@ -46,17 +46,27 @@
                     <div class="header-select-group">
                         <span class="select-label">显示:</span>
                         <select id="select-element-mode" class="custom-select">
-                            <option value="wuxing">☯️ 五行 (木火土金水)</option>
-                            <option value="number">🔢 数字 (5克4克3克2克1)</option>
+                            <option value="wuxing">☯️ 五行</option>
+                            <option value="number">🔢 数字</option>
                         </select>
                     </div>
 
                     <div class="header-select-group">
                         <span class="select-label">先手:</span>
                         <select id="select-first-player" class="custom-select">
-                            <option value="1">玩家先手 (蓝)</option>
-                            <option value="2">AI 先手 (红)</option>
-                            <option value="random">🎲 随机先手</option>
+                            <option value="1">玩家</option>
+                            <option value="2">AI</option>
+                            <option value="random">🎲 随机</option>
+                        </select>
+                    </div>
+
+                    <div class="header-select-group">
+                        <span class="select-label">AI:</span>
+                        <select id="select-ai-style" class="custom-select">
+                            <option value="random">🎲 随机风格</option>
+                            <option value="fighter">⚔️ 斗士</option>
+                            <option value="fortress">🛡️ 堡垒</option>
+                            <option value="combo">💥 机关师</option>
                         </select>
                     </div>
 
@@ -81,7 +91,7 @@
         <main class="game-layout">
             <!-- AI 手牌区 -->
             <section class="hand-section ai-hand-section">
-                <div class="section-title">AI 手牌</div>
+                <div class="section-title" id="ai-hand-title">AI 手牌</div>
                 <div class="hand-container" id="ai-hand">
                     <!-- 动态生成 AI 5张手牌 -->
                 </div>
@@ -188,6 +198,16 @@
                     </div>
 
                     <div class="settings-item-row">
+                        <span class="setting-label">AI 风格:</span>
+                        <select id="select-ai-style-mobile" class="custom-select select-mobile-full">
+                            <option value="random">🎲 随机风格</option>
+                            <option value="fighter">⚔️ 斗士</option>
+                            <option value="fortress">🛡️ 堡垒</option>
+                            <option value="combo">💥 机关师</option>
+                        </select>
+                    </div>
+
+                    <div class="settings-item-row">
                         <span class="setting-label">连锁翻牌:</span>
                         <label class="toggle-switch">
                             <input type="checkbox" id="toggle-combo-mobile" checked>
@@ -287,6 +307,6 @@
         </div>
     </div>
 
-    <script src="game.mobile-v2.js"></script>
+    <script src="game.ai-v3.js"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 /**
- * 五行旋转牌 (Five Elements Rotational Cards) - Core Game Engine
+ * 五行旋转牌 (Five Elements Rotational Cards) - AI Styles Game Engine
  */
 
 const ELEMENTS_DEFINITIONS = {
@@ -9,6 +9,26 @@ const ELEMENTS_DEFINITIONS = {
     3: { name: '金', num: '2', color: 'elem-3' },
     4: { name: '水', num: '4', color: 'elem-4' }
 };
+
+const AI_STYLE_DEFINITIONS = {
+    fighter: {
+        name: '斗士',
+        icon: '⚔️',
+        description: '偏爱立即翻牌、破盾与贴身进攻'
+    },
+    fortress: {
+        name: '堡垒',
+        icon: '🛡️',
+        description: '偏爱边角锚点、关键护盾与低暴露阵地'
+    },
+    combo: {
+        name: '机关师',
+        icon: '💥',
+        description: '偏爱多面接触与完整连锁收益'
+    }
+};
+
+const AI_STYLE_KEYS = Object.keys(AI_STYLE_DEFINITIONS);
 
 // 🎯 30 张卡牌与初代宝可梦 (Gen 1) 精准对应表
 const EXACT_30_CARDS_DEFINITIONS = [
@@ -83,6 +103,8 @@ class GameEngine {
         this.boardSize = 4;
         this.enableCombo = true;
         this.firstPlayerChoice = '1';
+        this.aiStyleChoice = 'random';
+        this.activeAIStyle = 'fighter';
         this.displayMode = 'wuxing'; // 'wuxing' | 'number'
         this.isProcessingAnim = false;
         this.previewState = null;
@@ -104,6 +126,10 @@ class GameEngine {
             this.currentTurn = parseInt(this.firstPlayerChoice);
         }
 
+        this.activeAIStyle = this.aiStyleChoice === 'random'
+            ? AI_STYLE_KEYS[Math.floor(Math.random() * AI_STYLE_KEYS.length)]
+            : this.aiStyleChoice;
+
         this.selectedCardIndex = null;
         this.selectedCardRotation = 0;
         this.targetedCell = null;
@@ -120,6 +146,10 @@ class GameEngine {
             return ELEMENTS_DEFINITIONS[val].num;
         }
         return ELEMENTS_DEFINITIONS[val].name;
+    }
+
+    getAIStyleMeta() {
+        return AI_STYLE_DEFINITIONS[this.activeAIStyle] || AI_STYLE_DEFINITIONS.fighter;
     }
 
     async performOpeningDeal(renderCallback, triggerDrawAnimCallback, onLogMsg) {
@@ -444,8 +474,9 @@ class GameEngine {
                     for (let ci = 0; ci < 5; ci++) {
                         if (!hand[ci]) continue;
                         for (let rot = 0; rot < 4; rot++) {
-                            const score = this.evaluateMoveScore(r, c, hand[ci], rot);
-                            moves.push({ r, c, cardIndex: ci, rotation: rot, score });
+                            const features = this.evaluateMoveFeatures(r, c, hand[ci], rot);
+                            const score = this.scoreAIMove(features);
+                            moves.push({ r, c, cardIndex: ci, rotation: rot, score, features });
                         }
                     }
                 }
@@ -461,8 +492,7 @@ class GameEngine {
         return bestMoves[Math.floor(Math.random() * bestMoves.length)];
     }
 
-    evaluateMoveScore(r, c, card, rotation) {
-        let score = 0;
+    evaluateMoveFeatures(r, c, card, rotation) {
         const activeEdges = this.getEffectiveEdges(card, rotation);
         const directions = [
             { dr: -1, dc: 0, myEdge: activeEdges.top,    theirDir: 'bottom' },
@@ -471,38 +501,171 @@ class GameEngine {
             { dr: 0, dc: -1, myEdge: activeEdges.left,   theirDir: 'right'  }
         ];
 
-        let touchesEnemy = false;
-        let touchesFriendly = false;
+        let directFlips = 0;
+        let directShieldBreaks = 0;
+        let friendlyLinks = 0;
+        let enemyContacts = 0;
+        let emptyExposure = 0;
 
         directions.forEach(dir => {
             const nr = r + dir.dr;
             const nc = c + dir.dc;
             if (nr >= 0 && nr < 4 && nc >= 0 && nc < 4) {
                 const neighbor = this.board[nr][nc];
-                if (neighbor) {
-                    const neighborEdges = this.getEffectiveEdges(neighbor.card, neighbor.orientation);
-                    if (neighbor.owner === 1) {
-                        touchesEnemy = true;
-                        if (doesOvercome(dir.myEdge, neighborEdges[dir.theirDir])) {
-                            if (neighbor.hasShield) score += 8;
-                            else score += 15;
-                        }
-                    } else if (neighbor.owner === 2) {
-                        touchesFriendly = true;
-                        if (doesGenerate(dir.myEdge, neighborEdges[dir.theirDir]) || doesGenerate(neighborEdges[dir.theirDir], dir.myEdge)) {
-                            score += 6;
-                        }
+                if (!neighbor) {
+                    emptyExposure++;
+                    return;
+                }
+
+                const neighborEdges = this.getEffectiveEdges(neighbor.card, neighbor.orientation);
+                if (neighbor.owner === 1) {
+                    enemyContacts++;
+                    if (doesOvercome(dir.myEdge, neighborEdges[dir.theirDir])) {
+                        if (neighbor.hasShield) directShieldBreaks++;
+                        else directFlips++;
                     }
+                } else if (neighbor.owner === 2) {
+                    friendlyLinks++;
                 }
             }
         });
 
-        if (!touchesEnemy && !touchesFriendly) {
-            const isCorner = (r === 0 || r === 3) && (c === 0 || c === 3);
-            if (isCorner) score += 3;
+        const preview = this.getPreviewOutcome(r, c, card, rotation) || {
+            flipCells: [],
+            shieldCells: [],
+            breakCells: [],
+            maxChainLevel: 1
+        };
+
+        const isCorner = (r === 0 || r === 3) && (c === 0 || c === 3);
+        const isEdge = !isCorner && (r === 0 || r === 3 || c === 0 || c === 3);
+        const isIsolated = friendlyLinks === 0 && enemyContacts === 0;
+        const uniqueElements = new Set(card.edges).size;
+        const phase = this.totalPlaced < 5 ? 'opening' : (this.totalPlaced < 12 ? 'middle' : 'end');
+
+        let shieldStrategicValue = 0;
+        const uniqueShieldCells = new Set();
+        preview.shieldCells.forEach(pos => {
+            const key = `${pos.r},${pos.c}`;
+            if (uniqueShieldCells.has(key)) return;
+            uniqueShieldCells.add(key);
+            shieldStrategicValue += this.evaluateShieldPositionValue(pos.r, pos.c, r, c);
+        });
+
+        return {
+            r,
+            c,
+            directFlips,
+            directShieldBreaks,
+            totalChainFlips: preview.flipCells.length,
+            totalShieldBreaks: preview.breakCells.length,
+            shieldsGranted: uniqueShieldCells.size,
+            shieldStrategicValue,
+            maxChainLevel: preview.maxChainLevel,
+            friendlyLinks,
+            enemyContacts,
+            emptyExposure,
+            isCorner,
+            isEdge,
+            isIsolated,
+            uniqueElements,
+            phase
+        };
+    }
+
+    evaluateShieldPositionValue(r, c, placedR, placedC) {
+        const directions = [
+            { dr: -1, dc: 0 },
+            { dr: 0, dc: 1 },
+            { dr: 1, dc: 0 },
+            { dr: 0, dc: -1 }
+        ];
+
+        let emptyNeighbors = 0;
+        let friendlyNeighbors = 0;
+
+        directions.forEach(dir => {
+            const nr = r + dir.dr;
+            const nc = c + dir.dc;
+            if (nr < 0 || nr >= 4 || nc < 0 || nc >= 4) return;
+
+            if (nr === placedR && nc === placedC) {
+                friendlyNeighbors++;
+                return;
+            }
+
+            const neighbor = this.board[nr][nc];
+            if (!neighbor) emptyNeighbors++;
+            else if (neighbor.owner === 2) friendlyNeighbors++;
+        });
+
+        const isCorner = (r === 0 || r === 3) && (c === 0 || c === 3);
+        const isEdge = !isCorner && (r === 0 || r === 3 || c === 0 || c === 3);
+        const positionRisk = isCorner ? 0.5 : (isEdge ? 1 : 2);
+
+        return 1 + emptyNeighbors * 1.5 + friendlyNeighbors * 1.25 + positionRisk;
+    }
+
+    scoreAIMove(features) {
+        const {
+            directFlips,
+            directShieldBreaks,
+            totalChainFlips,
+            totalShieldBreaks,
+            shieldsGranted,
+            shieldStrategicValue,
+            maxChainLevel,
+            friendlyLinks,
+            enemyContacts,
+            emptyExposure,
+            isCorner,
+            isEdge,
+            isIsolated,
+            uniqueElements,
+            phase
+        } = features;
+
+        const extraChainFlips = Math.max(0, totalChainFlips - directFlips);
+        const phasePositionWeight = phase === 'opening' ? 1 : (phase === 'middle' ? 0.55 : 0.1);
+        const endgameFlipBonus = phase === 'end' ? totalChainFlips * 9 : 0;
+
+        if (this.activeAIStyle === 'fortress') {
+            return (
+                directFlips * 7 +
+                extraChainFlips * 6 +
+                totalShieldBreaks * 4 +
+                shieldsGranted * 4 +
+                shieldStrategicValue * 3.5 +
+                friendlyLinks * 5 +
+                (isCorner ? 11 : (isEdge ? 5 : 0)) * phasePositionWeight -
+                emptyExposure * (phase === 'opening' ? 2.5 : 1.25) -
+                (phase === 'opening' ? uniqueElements * 0.8 : 0) +
+                endgameFlipBonus
+            );
         }
 
-        return score;
+        if (this.activeAIStyle === 'combo') {
+            return (
+                directFlips * 9 +
+                extraChainFlips * 18 +
+                maxChainLevel * 6 +
+                directShieldBreaks * 5 +
+                shieldStrategicValue * 1.5 +
+                enemyContacts * 2.5 +
+                (!isEdge && !isCorner ? 3 : 0) -
+                (isIsolated ? 2 : 0) +
+                endgameFlipBonus
+            );
+        }
+
+        return (
+            directFlips * 15 +
+            directShieldBreaks * 8 +
+            shieldsGranted * 6 +
+            extraChainFlips * 5 +
+            (isCorner && isIsolated ? 3 : 0) +
+            endgameFlipBonus
+        );
     }
 
     checkGameOver() {
@@ -542,12 +705,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const turnTextEl = document.getElementById('turn-text');
     const p1ScoreEl = document.getElementById('p1-card-count');
     const p2ScoreEl = document.getElementById('p2-card-count');
+    const aiStyleLabelEl = document.getElementById('ai-style-label');
+    const aiHandTitleEl = document.getElementById('ai-hand-title');
     const deckRemainingEl = document.getElementById('deck-remaining');
     const btnRotate = document.getElementById('btn-rotate');
     const btnRestart = document.getElementById('btn-restart');
     const btnOpenRules = document.getElementById('btn-open-rules');
     const selectElementModeEl = document.getElementById('select-element-mode');
     const selectFirstPlayerEl = document.getElementById('select-first-player');
+    const selectAIStyleEl = document.getElementById('select-ai-style');
     const toggleComboEl = document.getElementById('toggle-combo');
     const combatBannerEl = document.getElementById('combat-banner');
     const logListEl = document.getElementById('log-list');
@@ -564,6 +730,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnModalOpenLog = document.getElementById('btn-modal-open-log');
     const selectElementModeMobile = document.getElementById('select-element-mode-mobile');
     const selectFirstPlayerMobile = document.getElementById('select-first-player-mobile');
+    const selectAIStyleMobile = document.getElementById('select-ai-style-mobile');
     const toggleComboMobile = document.getElementById('toggle-combo-mobile');
     const btnModalRestart = document.getElementById('btn-modal-restart');
     
@@ -632,6 +799,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnOpenMobileSettings.addEventListener('click', () => {
         selectElementModeMobile.value = game.displayMode;
         selectFirstPlayerMobile.value = game.firstPlayerChoice;
+        selectAIStyleMobile.value = game.aiStyleChoice;
         toggleComboMobile.checked = game.enableCombo;
         showModal(mobileSettingsModalEl);
     });
@@ -663,6 +831,11 @@ document.addEventListener('DOMContentLoaded', () => {
         mobileLogListContainerEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         hideModal(mobileSettingsModalEl);
         initGameFlow();
+    });
+
+    selectAIStyleMobile.addEventListener('change', (e) => {
+        applyAIStyleChoice(e.target.value);
+        hideModal(mobileSettingsModalEl);
     });
 
     toggleComboMobile.addEventListener('change', (e) => {
@@ -707,6 +880,10 @@ document.addEventListener('DOMContentLoaded', () => {
         initGameFlow();
     });
 
+    selectAIStyleEl.addEventListener('change', (e) => {
+        applyAIStyleChoice(e.target.value);
+    });
+
     toggleComboEl.addEventListener('change', (e) => {
         game.enableCombo = e.target.checked;
         const msg = game.enableCombo ? '⚡ 连锁翻牌模式已开启' : '🛑 连锁翻牌模式已关闭';
@@ -741,9 +918,25 @@ document.addEventListener('DOMContentLoaded', () => {
         initGameFlow();
     });
 
+    function applyAIStyleChoice(choice) {
+        game.aiStyleChoice = choice;
+        selectAIStyleEl.value = choice;
+        selectAIStyleMobile.value = choice;
+
+        const choiceText = choice === 'random'
+            ? '🎲 随机风格'
+            : `${AI_STYLE_DEFINITIONS[choice].icon} ${AI_STYLE_DEFINITIONS[choice].name}`;
+        const logMsg = `🤖 游戏重置，AI 风格调整为：${choiceText}`;
+        logListEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
+        mobileLogListContainerEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
+        initGameFlow();
+    }
+
     async function initGameFlow() {
         game.resetGame();
         render();
+        const aiStyle = game.getAIStyleMeta();
+        addLogEntry(`🤖 本局 AI：${aiStyle.icon} ${aiStyle.name}型 · ${aiStyle.description}`, 'system');
         await game.performOpeningDeal(
             () => render(),
             (owner, slotIdx, duration) => triggerDrawFlyingAnim(owner, slotIdx, duration),
@@ -1169,8 +1362,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderStatus() {
         const scores = game.getScores();
+        const aiStyle = game.getAIStyleMeta();
         p1ScoreEl.textContent = scores.p1;
         p2ScoreEl.textContent = scores.p2;
+        aiStyleLabelEl.textContent = `AI·${aiStyle.name}`;
+        aiHandTitleEl.textContent = `${aiStyle.icon} AI · ${aiStyle.name}`;
         deckRemainingEl.textContent = game.deck.length;
 
         if (game.currentTurn === 1) {
