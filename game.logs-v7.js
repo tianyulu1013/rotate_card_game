@@ -908,8 +908,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalBodyEl = document.getElementById('modal-body');
     const modalBtnRestart = document.getElementById('modal-btn-restart');
     const rotateHintStorageKey = 'flipcard.rotateHintSeen.v1';
-    let rotateHintFeedbackActive = false;
-    let rotateHintFeedbackTimer = null;
 
     // 🔒 页面初始化：确保所有 Modal 弹窗均带有 hidden 类（网页端绝不默认开启规则书）
     [rulebookModalEl, mobileSettingsModalEl, mobileLogModalEl, modalEl].forEach(m => {
@@ -1147,11 +1145,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function initGameFlow() {
         game.resetGame();
-        rotateHintFeedbackActive = false;
-        if (rotateHintFeedbackTimer) {
-            clearTimeout(rotateHintFeedbackTimer);
-            rotateHintFeedbackTimer = null;
-        }
         mobileLatestLogEl.className = 'mobile-latest-log';
         mobileLatestLogTextEl.textContent = '等待第一步……';
         render();
@@ -1177,31 +1170,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function showRotateFeedback() {
+    function rememberRotateHintSeen() {
         if (!window.matchMedia('(max-width: 768px)').matches) return;
         try {
             localStorage.setItem(rotateHintStorageKey, 'true');
         } catch (error) {
             // 无痕模式或受限存储下仍保留本次会话提示，不阻塞游戏。
         }
-
-        rotateHintFeedbackActive = true;
-        if (rotateHintFeedbackTimer) clearTimeout(rotateHintFeedbackTimer);
-        rotateHintFeedbackTimer = setTimeout(() => {
-            rotateHintFeedbackActive = false;
-            updateMobileRotateHint();
-        }, 1200);
     }
 
     function updateMobileRotateHint() {
         if (!mobileRotateHintEl) return;
-        mobileRotateHintEl.classList.remove('is-teaching', 'is-success');
+        mobileRotateHintEl.classList.remove('is-teaching');
 
-        if (rotateHintFeedbackActive) {
-            mobileRotateHintEl.textContent = '✓ 已旋转90°';
-            mobileRotateHintEl.classList.add('is-success');
-        } else if (game.selectedCardIndex !== null && game.currentTurn === 1) {
-            mobileRotateHintEl.textContent = '↻ 再点此牌旋转';
+        if (game.selectedCardIndex !== null && game.currentTurn === 1) {
+            mobileRotateHintEl.textContent = '↻ 再点此牌顺时针旋转';
             if (!hasSeenRotateHint()) {
                 mobileRotateHintEl.classList.add('is-teaching');
             }
@@ -1215,7 +1198,7 @@ document.addEventListener('DOMContentLoaded', () => {
             game.selectedCardRotation = (game.selectedCardRotation + 1) % 4;
             game.targetedCell = null;
             game.previewState = null;
-            showRotateFeedback();
+            rememberRotateHintSeen();
             renderPlayerHand();
             renderBoard();
         }
@@ -1633,7 +1616,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (game.currentTurn === 1 && !game.isProcessingAnim) {
                         if (game.selectedCardIndex === slot) {
                             game.selectedCardRotation = (game.selectedCardRotation + 1) % 4;
-                            showRotateFeedback();
+                            rememberRotateHintSeen();
                         } else {
                             game.selectedCardIndex = slot;
                             game.selectedCardRotation = 0;
@@ -1697,7 +1680,7 @@ document.addEventListener('DOMContentLoaded', () => {
         aiHandTitleEl.innerHTML = `${avatarHtml}<span>${aiStyle.name} 手牌</span>`;
         deckRemainingEl.textContent = game.deck.length;
         mobileDeckRemainingEl.textContent = game.deck.length;
-        mobileDeckCountEl.setAttribute('aria-label', `摸牌堆剩余${game.deck.length}张`);
+        mobileDeckCountEl.setAttribute('aria-label', `抽牌堆剩余${game.deck.length}张`);
 
         if (game.gameOver) {
             showEndGameModal(scores);
