@@ -31,7 +31,7 @@ const AI_STYLE_DEFINITIONS = {
         icon: '🌊',
         avatarUrl: 'assets/avatars/misty-official.png',
         avatarType: 'trainer',
-        avatarFace: { x: 207, y: 45, scale: 0.48 }
+        avatarFace: { x: 240, y: 46, scale: 0.48 }
     },
     brock: {
         name: '小刚',
