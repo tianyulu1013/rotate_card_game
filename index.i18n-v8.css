@@ -1209,7 +1209,7 @@ input:checked + .slider::before { transform: translateX(12px); }
         font-size: 0.8rem;
     }
 
-    .status-bar { gap: 0.25rem; position: static; transform: none; flex: 1; justify-content: center; }
+    .status-bar { gap: 0.25rem; position: static; transform: none; flex: 0 0 auto; justify-content: center; }
     .player-score { padding: 0.15rem 0.35rem; border-radius: 10px; }
     .player-name { display: none; }
     .score-num { font-size: 0.9rem; width: 12px; }
