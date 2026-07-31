@@ -60,7 +60,7 @@ const UI_TEXT = {
         flip: '翻牌'
     },
     en: {
-        gameTitle: 'Elemental Flip Arena',
+        gameTitle: 'Pokemon Rotate Arena',
         player: 'Player',
         opponent: 'Opponent',
         displayLabel: 'Mode:',

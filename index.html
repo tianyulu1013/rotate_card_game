@@ -42,6 +42,8 @@
                     <span id="p1-card-count" class="score-num">0</span>
                 </div>
                 
+                <span class="score-divider">:</span>
+
                 <div class="player-score p2-score">
                     <span id="p2-card-count" class="score-num">0</span>
                     <span class="player-name" id="ai-style-label">对手</span>
@@ -51,8 +53,13 @@
 
             <div class="header-actions">
                 <button id="btn-language-toggle" class="btn btn-secondary language-toggle" type="button" aria-label="Switch to English">EN</button>
-                <!-- 桌面版平铺选项 / 手机版收纳到 ⚙️ 设置 -->
-                <div class="desktop-header-controls">
+                <button id="btn-open-rules" class="btn btn-secondary" data-i18n="rulesButton">📖 规则</button>
+                <button id="btn-open-mobile-settings" class="btn btn-primary settings-btn" data-i18n="settingsButton">
+                    ⚙️ 设置
+                </button>
+
+                <!-- 隐藏的旧节点（保留供底层JS DOM兼容引用） -->
+                <div class="desktop-header-controls" style="display: none !important;">
                     <div class="header-select-group">
                         <span class="select-label" data-i18n="displayLabel">显示:</span>
                         <select id="select-element-mode" class="custom-select">
@@ -100,14 +107,8 @@
                         <span class="toggle-label" data-i18n="generateChain">相生连锁</span>
                     </label>
 
-                    <button id="btn-open-rules" class="btn btn-secondary" data-i18n="rulesButton">📖 规则</button>
                     <button id="btn-restart" class="btn btn-secondary" data-i18n="restartButton">重新开局</button>
                 </div>
-
-                <!-- 📱 手机端单一 ⚙️ 设置按钮 (点击展开所有功能) -->
-                <button id="btn-open-mobile-settings" class="btn btn-primary mobile-settings-btn" data-i18n="settingsButton">
-                    ⚙️ 设置
-                </button>
             </div>
         </header>
 
