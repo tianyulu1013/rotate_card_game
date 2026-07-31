@@ -1,4 +1,4 @@
-/* 浅色高质感设计系统（角色头像、彩色战况日志与手机界面版） */
+/* Bilingual Chinese/English responsive styles (cache-safe v8) */
 :root {
     --bg-light: #f8fafc;
     --bg-card: #ffffff;
@@ -369,6 +369,11 @@ input:checked + .slider::before { transform: translateX(12px); }
 .btn-secondary { background: #ffffff; color: var(--text-primary); border: 1px solid #cbd5e1; }
 .btn-action { background: linear-gradient(135deg, #6366f1, #a855f7); color: #fff; }
 .btn-full { width: 100%; justify-content: center; padding: 0.55rem 1rem; font-size: 0.88rem; }
+.language-toggle {
+    min-width: 34px;
+    justify-content: center;
+    padding-inline: 0.45rem;
+}
 
 .mobile-settings-btn { display: none; }
 .mobile-deck-count { display: none; }
@@ -575,6 +580,11 @@ input:checked + .slider::before { transform: translateX(12px); }
 .log-name {
     font-weight: 800;
     white-space: nowrap;
+}
+.log-owner {
+    font-size: 0.82em;
+    font-weight: 700;
+    opacity: 0.82;
 }
 .log-name-p1 { color: #1d4ed8; }
 .log-name-p2 { color: #e11d48; }
@@ -1136,6 +1146,7 @@ input:checked + .slider::before { transform: translateX(12px); }
 
     .desktop-header-controls { display: none !important; }
     .mobile-settings-btn { display: inline-flex !important; font-size: 0.72rem; padding: 0.2rem 0.5rem; }
+    .language-toggle { font-size: 0.65rem; padding: 0.2rem 0.38rem; min-width: 30px; }
     .settings-item-row .ai-picker {
         width: 160px;
         min-width: 160px;
@@ -1156,6 +1167,16 @@ input:checked + .slider::before { transform: translateX(12px); }
     .logo { gap: 0.15rem; }
     .logo-icon { font-size: 1.1rem; }
     .logo h1 { font-size: 0.78rem; }
+    html[lang="en"] .logo h1 { font-size: 0.62rem; }
+    html[lang="en"] .mobile-settings-btn {
+        min-width: 30px;
+        padding: 0.2rem 0.38rem;
+        font-size: 0;
+    }
+    html[lang="en"] .mobile-settings-btn::before {
+        content: "⚙️";
+        font-size: 0.8rem;
+    }
 
     .status-bar { gap: 0.25rem; }
     .player-score { padding: 0.15rem 0.35rem; border-radius: 10px; }
@@ -1283,6 +1304,16 @@ input:checked + .slider::before { transform: translateX(12px); }
         border-radius: 4px;
         text-align: center;
     }
+    html[lang="en"] .mobile-inline-legend .legend-label {
+        width: 42px;
+        flex-basis: 42px;
+        font-size: 0.46rem;
+    }
+    html[lang="en"] .mobile-inline-legend .elem-tag {
+        font-size: 0.43rem;
+        padding-inline: 0.04rem;
+    }
+    html[lang="en"] .mobile-inline-legend .arrow { font-size: 0.42rem; }
 
     .mobile-inline-legend .arrow {
         flex: 0 0 auto;
@@ -1500,6 +1531,7 @@ input:checked + .slider::before { transform: translateX(12px); }
     }
 
     .player-hand-section .card-top-name-bar { font-size: 0.58rem; padding: 0.05rem; }
+    html[lang="en"] .player-hand-section .card-top-name-bar { font-size: 0.48rem; }
     .player-hand-section .edge-badge { width: 17px; height: 17px; font-size: 0.6rem; border-radius: 4px; }
     .player-hand-section .edge-top { top: 1px; left: calc(50% - 8.5px); }
     .player-hand-section .edge-right { right: 1px; top: calc(50% - 8.5px); }

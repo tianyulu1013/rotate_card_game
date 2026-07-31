@@ -1,33 +1,252 @@
 /**
+ * Bilingual Chinese/English game client (cache-safe v8)
  * 精灵翻翻阵 - Named Battle Logs and Mobile UI Game Engine
  */
 
+const UI_TEXT = {
+    zh: {
+        gameTitle: '精灵翻翻阵',
+        player: '玩家',
+        opponent: '对手',
+        displayLabel: '显示:',
+        modeFiveElements: '☯️ 五行',
+        modeNumbers: '🔢 数字',
+        firstPlayerLabel: '先手:',
+        random: '🎲 随机',
+        opponentLabel: '对手:',
+        flipChain: '翻牌连锁',
+        generateChain: '相生连锁',
+        rulesButton: '📖 规则',
+        restartButton: '重新开局',
+        settingsButton: '⚙️ 设置',
+        opponentHand: '对手手牌',
+        deck: '抽牌堆',
+        drawPile: '🎴 摸牌堆',
+        remainingPrefix: '余',
+        cardsSuffix: '张',
+        battleLogTitle: '📜 战况历史日志',
+        clear: '清空',
+        playerHand: '玩家手牌',
+        tapCard: '点牌选择',
+        rotate90: '旋转 90°',
+        shortcutR: ' (快捷键 R)',
+        settingsTitle: '⚙️ 游戏设置与工具',
+        rulesExplanation: '📖 玩法规则说明',
+        displayModeLabel: '显示模式:',
+        modeFiveElementsLong: '☯️ 五行 (木火土金水)',
+        modeNumbersLong: '🔢 数字 (5克4克3克2克1)',
+        turnOrderLabel: '先后手:',
+        playerFirst: '玩家先手 (蓝)',
+        opponentFirst: '对手先手 (红)',
+        randomFirst: '🎲 随机先手',
+        chooseOpponent: '选择对手:',
+        flipChainLabel: '连锁翻牌:',
+        enableChain: '开启连锁',
+        generateChainLabel: '相生连锁:',
+        challengeYourself: '挑战自我',
+        restartGame: '🔄 重新开始游戏',
+        done: '完成',
+        clearLog: '清空日志',
+        close: '关闭',
+        confirm: '确定',
+        gameOver: '游戏结束',
+        playAgain: '再玩一局',
+        beginnerGroup: '入门对手',
+        advancedGroup: '高级对手',
+        beginnerRandom: '入门随机',
+        advancedRandom: '高级随机',
+        waiting: '等待第一步……',
+        shield: '护盾',
+        flip: '翻牌'
+    },
+    en: {
+        gameTitle: 'Elemental Flip Arena',
+        player: 'Player',
+        opponent: 'Opponent',
+        displayLabel: 'Mode:',
+        modeFiveElements: '☯️ Five Elements',
+        modeNumbers: '🔢 Numbers',
+        firstPlayerLabel: 'First:',
+        random: '🎲 Random',
+        opponentLabel: 'Opponent:',
+        flipChain: 'Flip Chain',
+        generateChain: 'Generation Chain',
+        rulesButton: '📖 Rules',
+        restartButton: 'New Game',
+        settingsButton: '⚙️ Settings',
+        opponentHand: 'Opponent Hand',
+        deck: 'Deck',
+        drawPile: '🎴 Draw Pile',
+        remainingPrefix: '',
+        cardsSuffix: 'left',
+        battleLogTitle: '📜 Battle Log',
+        clear: 'Clear',
+        playerHand: 'Player Hand',
+        tapCard: 'Tap a card',
+        rotate90: 'Rotate 90°',
+        shortcutR: ' (R key)',
+        settingsTitle: '⚙️ Game Settings',
+        rulesExplanation: '📖 How to Play',
+        displayModeLabel: 'Display:',
+        modeFiveElementsLong: '☯️ Five Elements',
+        modeNumbersLong: '🔢 Numbers (5→4→3→2→1)',
+        turnOrderLabel: 'First turn:',
+        playerFirst: 'Player first (Blue)',
+        opponentFirst: 'Opponent first (Red)',
+        randomFirst: '🎲 Random first',
+        chooseOpponent: 'Choose opponent:',
+        flipChainLabel: 'Flip chain:',
+        enableChain: 'Enable',
+        generateChainLabel: 'Generation chain:',
+        challengeYourself: 'Challenge mode',
+        restartGame: '🔄 Restart Game',
+        done: 'Done',
+        clearLog: 'Clear Log',
+        close: 'Close',
+        confirm: 'Got It',
+        gameOver: 'Game Over',
+        playAgain: 'Play Again',
+        beginnerGroup: 'Beginner Opponents',
+        advancedGroup: 'Advanced Opponents',
+        beginnerRandom: 'Beginner Random',
+        advancedRandom: 'Advanced Random',
+        waiting: 'Waiting for the first move…',
+        shield: 'Shield',
+        flip: 'Flip'
+    }
+};
+
+const RULEBOOK_HTML = {
+    zh: `
+        <div class="rule-section">
+            <h3>🏆 1. 胜负判定</h3>
+            <p>4×4 棋盘（共 16 格）。盘满或双方无牌可出时，<b>控制卡牌数量多者获胜</b>。</p>
+        </div>
+        <div class="rule-section">
+            <h3>🗺️ 2. 落子与护盾</h3>
+            <p>▪ 可以在棋盘任意空格落子。</p>
+            <p>▪ 全场第一张打出的卡牌自动获得【神圣护盾 <span class="shield-icon rule-shield-icon" aria-label="护盾"></span>】。</p>
+            <p>▪ 护盾只有 <b>1 层</b>，重复相生不会叠加层数。</p>
+            <p>▪ 护盾抵挡一次有效相克后破碎；该次攻击不会改变卡牌归属，也不会让卡牌旋转。</p>
+            <p>▪ <b>手机预判落子</b>：点击第 1 下预览结果，再次点击同一格确认落子。</p>
+        </div>
+        <div class="rule-section">
+            <h3>⚔️ 3. 相克（翻牌）</h3>
+            <div class="rule-highlight overcome-bg">
+                <b>⚔️ 五行：木克土 → 土克水 → 水克火 → 火克金 → 金克木</b><br>
+                <b>🔢 数字：5克4 → 4克3 → 3克2 → 2克1 → 1克5</b>
+            </div>
+            <p>你的接触边相克<b>敌方</b>接触边时，敌牌旋转 180° 并归你控制。</p>
+            <p>▪ <b>相克永远不会翻转己方牌</b>；己方牌接触时只检查相生。</p>
+            <p>▪ 没有形成相克关系的敌我接触不会产生效果。</p>
+        </div>
+        <div class="rule-section">
+            <h3>🌟 4. 相生（授盾）</h3>
+            <div class="rule-highlight generate-bg">
+                <b>🌟 五行：木生火 → 火生土 → 土生金 → 金生水 → 水生木</b><br>
+                <b>🔢 数字：1生3 → 3生5 → 5生2 → 2生4 → 4生1</b>
+            </div>
+            <p>主动落子与己方牌接触时，会检查接触边的两个方向；形成相生后，<b>被生的一方</b>获得【护盾 <span class="shield-icon rule-shield-icon" aria-label="护盾"></span>】。</p>
+            <p>▪ 相生只发生在<b>同一阵营</b>之间，不会给敌牌授盾。</p>
+            <p>▪ 每张牌最多持有 1 层护盾。</p>
+        </div>
+        <div class="rule-section">
+            <h3>💥 5. 连锁反应</h3>
+            <p>刚被翻转的牌会以新阵营身份继续检查相邻<b>敌方牌</b>，形成相克时继续翻转。</p>
+            <p>▪ 默认连锁只继续相克，不产生新护盾。</p>
+            <p>▪ 开启【相生连锁】后，连锁翻转的牌也能与己方牌触发相生。</p>
+            <p>▪ 护盾会挡住一次攻击，连锁不会穿过该牌。</p>
+            <p>▪ 关闭【翻牌连锁】后，只结算主动落子的第一层接触。</p>
+        </div>
+        <div class="rule-section">
+            <h3>📋 6. 判定顺序</h3>
+            <p>① 先看阵营：己方只检查相生，敌方只检查相克。</p>
+            <p>② 再看护盾：有效相克先击碎护盾；无盾才翻转并转换阵营。</p>
+            <p>③ 最后处理连锁：只有真正被翻转的牌才成为下一层连锁来源。</p>
+        </div>`,
+    en: `
+        <div class="rule-section">
+            <h3>🏆 1. Winning the Game</h3>
+            <p>The board is 4×4 (16 spaces). When the board is full or neither side can play, <b>the side controlling more cards wins</b>.</p>
+        </div>
+        <div class="rule-section">
+            <h3>🗺️ 2. Placing Cards & Shields</h3>
+            <p>▪ You may place a card in any empty space.</p>
+            <p>▪ The first card played receives a Divine Shield <span class="shield-icon rule-shield-icon" aria-label="Shield"></span>.</p>
+            <p>▪ A card can hold only <b>one Shield</b>; generating again does not stack Shields.</p>
+            <p>▪ A Shield breaks when it blocks one effective Overcome. That attack does not change ownership or rotate the card.</p>
+            <p>▪ <b>Mobile preview</b>: tap an empty space once to preview, then tap it again to confirm.</p>
+        </div>
+        <div class="rule-section">
+            <h3>⚔️ 3. Overcoming (Flip & Capture)</h3>
+            <div class="rule-highlight overcome-bg">
+                <b>⚔️ Five Elements (Wu Xing): Wood → Earth → Water → Fire → Metal → Wood</b><br>
+                <b>🔢 Number Cycle: 5→4 → 4→3 → 3→2 → 2→1 → 1→5</b>
+            </div>
+            <p>When your touching edge <b>overcomes an enemy edge</b>, that enemy card rotates 180° and becomes yours.</p>
+            <p>▪ <b>Overcoming never flips a friendly card.</b> Friendly contact checks only for Generating.</p>
+            <p>▪ Enemy contact with no Overcome relationship has no effect.</p>
+        </div>
+        <div class="rule-section">
+            <h3>🌟 4. Generating (Granting Shields)</h3>
+            <div class="rule-highlight generate-bg">
+                <b>🌟 Generating Cycle: Wood → Fire → Earth → Metal → Water → Wood</b><br>
+                <b>🔢 Number Cycle: 1→3 → 3→5 → 5→2 → 2→4 → 4→1</b>
+            </div>
+            <p>When the card you place touches a friendly card, both directions are checked. The <b>generated element</b> receives a Shield <span class="shield-icon rule-shield-icon" aria-label="Shield"></span>.</p>
+            <p>▪ Generating occurs only between <b>cards on the same side</b>; it never shields an enemy.</p>
+            <p>▪ Each card can hold at most one Shield.</p>
+        </div>
+        <div class="rule-section">
+            <h3>💥 5. Chain Reactions</h3>
+            <p>A newly captured card checks adjacent <b>enemy cards</b> as a member of its new side and can continue the flip chain.</p>
+            <p>▪ By default, chains continue only Overcoming and do not create new Shields.</p>
+            <p>▪ Enable <b>Generation Chain</b> to let captured cards generate Shields with friendly cards during a chain.</p>
+            <p>▪ A Shield blocks one attack, and the chain does not pass through that card.</p>
+            <p>▪ Disable <b>Flip Chain</b> to resolve only the first contact layer from the placed card.</p>
+        </div>
+        <div class="rule-section">
+            <h3>📋 6. Resolution Order</h3>
+            <p>① Check ownership: friendly contact checks Generating; enemy contact checks Overcoming.</p>
+            <p>② Check Shields: an effective Overcome breaks a Shield first; only an unshielded card flips and changes sides.</p>
+            <p>③ Resolve chains: only a card that actually flipped can become the next chain source.</p>
+        </div>`
+};
+
+function interpolate(text, values = {}) {
+    return String(text).replace(/\{(\w+)\}/g, (_, key) => values[key] ?? '');
+}
+
 const ELEMENTS_DEFINITIONS = {
-    0: { name: '木', num: '1', color: 'elem-0' },
-    1: { name: '火', num: '3', color: 'elem-1' },
-    2: { name: '土', num: '5', color: 'elem-2' },
-    3: { name: '金', num: '2', color: 'elem-3' },
-    4: { name: '水', num: '4', color: 'elem-4' }
+    0: { name: '木', nameEn: 'Wood', symbol: '🌿', num: '1', color: 'elem-0' },
+    1: { name: '火', nameEn: 'Fire', symbol: '🔥', num: '3', color: 'elem-1' },
+    2: { name: '土', nameEn: 'Earth', symbol: '⛰️', num: '5', color: 'elem-2' },
+    3: { name: '金', nameEn: 'Metal', symbol: '⚔️', num: '2', color: 'elem-3' },
+    4: { name: '水', nameEn: 'Water', symbol: '💧', num: '4', color: 'elem-4' }
 };
 
 const AI_STYLE_DEFINITIONS = {
     meowth: {
         name: '喵喵',
+        nameEn: 'Meowth',
         icon: '🐾',
         avatarUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/52.png'
     },
     psyduck: {
         name: '可达鸭',
+        nameEn: 'Psyduck',
         icon: '🦆',
         avatarUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/54.png'
     },
     eevee: {
         name: '伊布',
+        nameEn: 'Eevee',
         icon: '🦊',
         avatarUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/133.png'
     },
     misty: {
         name: '小霞',
+        nameEn: 'Misty',
         icon: '🌊',
         avatarUrl: 'assets/avatars/misty-official.png',
         avatarType: 'trainer',
@@ -35,6 +254,7 @@ const AI_STYLE_DEFINITIONS = {
     },
     brock: {
         name: '小刚',
+        nameEn: 'Brock',
         icon: '🪨',
         avatarUrl: 'assets/avatars/brock-official.png',
         avatarType: 'trainer',
@@ -42,6 +262,7 @@ const AI_STYLE_DEFINITIONS = {
     },
     ash: {
         name: '小智',
+        nameEn: 'Ash',
         icon: '⚡',
         avatarUrl: 'assets/avatars/ash-official.png',
         avatarType: 'trainer',
@@ -52,61 +273,63 @@ const AI_STYLE_DEFINITIONS = {
 const BEGINNER_AI_STYLE_KEYS = ['meowth', 'psyduck', 'eevee'];
 const ADVANCED_AI_STYLE_KEYS = ['misty', 'brock', 'ash'];
 
-function createAIAvatarHtml(aiStyle) {
+function createAIAvatarHtml(aiStyle, language = 'zh') {
     const avatarClass = aiStyle.avatarType === 'trainer' ? ' ai-avatar--trainer' : '';
     const faceStyle = aiStyle.avatarFace
         ? ` style="--avatar-x:-${aiStyle.avatarFace.x}px;--avatar-y:-${aiStyle.avatarFace.y}px;--avatar-scale:${aiStyle.avatarFace.scale}"`
         : '';
-    return `<span class="ai-avatar${avatarClass}"${faceStyle}><img src="${aiStyle.avatarUrl}" alt="${aiStyle.name}头像"></span>`;
+    const displayName = language === 'en' ? aiStyle.nameEn : aiStyle.name;
+    const avatarAlt = language === 'en' ? `${displayName} avatar` : `${displayName}头像`;
+    return `<span class="ai-avatar${avatarClass}"${faceStyle}><img src="${aiStyle.avatarUrl}" alt="${avatarAlt}"></span>`;
 }
 
-function createRandomAvatarStack(keys) {
+function createRandomAvatarStack(keys, language = 'zh') {
     return `<span class="ai-random-avatars">${keys
-        .map(key => createAIAvatarHtml(AI_STYLE_DEFINITIONS[key]))
+        .map(key => createAIAvatarHtml(AI_STYLE_DEFINITIONS[key], language))
         .join('')}</span>`;
 }
 
 // 🎯 30 张卡牌与初代宝可梦 (Gen 1) 精准对应表
 const EXACT_30_CARDS_DEFINITIONS = [
     // 🌟 一、纯色霸体牌 (AAAA) - 御三家与经典担当
-    { type: 'AAAA', edges: [1, 1, 1, 1], name: '小火龙', pokeId: 4 },
-    { type: 'AAAA', edges: [4, 4, 4, 4], name: '杰尼龟', pokeId: 7 },
-    { type: 'AAAA', edges: [0, 0, 0, 0], name: '妙蛙种子', pokeId: 1 },
-    { type: 'AAAA', edges: [2, 2, 2, 2], name: '大岩蛇', pokeId: 95 },
-    { type: 'AAAA', edges: [3, 3, 3, 3], name: '皮卡丘', pokeId: 25 },
+    { type: 'AAAA', edges: [1, 1, 1, 1], name: '小火龙', nameEn: 'Charmander', pokeId: 4 },
+    { type: 'AAAA', edges: [4, 4, 4, 4], name: '杰尼龟', nameEn: 'Squirtle', pokeId: 7 },
+    { type: 'AAAA', edges: [0, 0, 0, 0], name: '妙蛙种子', nameEn: 'Bulbasaur', pokeId: 1 },
+    { type: 'AAAA', edges: [2, 2, 2, 2], name: '大岩蛇', nameEn: 'Onix', pokeId: 95 },
+    { type: 'AAAA', edges: [3, 3, 3, 3], name: '皮卡丘', nameEn: 'Pikachu', pokeId: 25 },
 
     // 📐 二、双色 L 角牌 (AABB) - 经典双系
-    { type: 'AABB', edges: [3, 3, 4, 4], name: '乘龙', pokeId: 131 },
-    { type: 'AABB', edges: [4, 4, 0, 0], name: '可达鸭', pokeId: 54 },
-    { type: 'AABB', edges: [0, 0, 1, 1], name: '派拉斯特', pokeId: 47 },
-    { type: 'AABB', edges: [1, 1, 2, 2], name: '九尾', pokeId: 38 },
-    { type: 'AABB', edges: [2, 2, 3, 3], name: '三合一磁怪', pokeId: 82 },
+    { type: 'AABB', edges: [3, 3, 4, 4], name: '乘龙', nameEn: 'Lapras', pokeId: 131 },
+    { type: 'AABB', edges: [4, 4, 0, 0], name: '可达鸭', nameEn: 'Psyduck', pokeId: 54 },
+    { type: 'AABB', edges: [0, 0, 1, 1], name: '派拉斯特', nameEn: 'Parasect', pokeId: 47 },
+    { type: 'AABB', edges: [1, 1, 2, 2], name: '九尾', nameEn: 'Ninetales', pokeId: 38 },
+    { type: 'AABB', edges: [2, 2, 3, 3], name: '三合一磁怪', nameEn: 'Magneton', pokeId: 82 },
 
     // ✖️ 三、双色十字牌 (ABAB) - 强力对边双系
-    { type: 'ABAB', edges: [3, 1, 3, 1], name: '鸭嘴火兽', pokeId: 126 },
-    { type: 'ABAB', edges: [4, 2, 4, 2], name: '呆壳兽', pokeId: 80 },
-    { type: 'ABAB', edges: [0, 3, 0, 3], name: '飞天螳螂', pokeId: 123 },
-    { type: 'ABAB', edges: [1, 4, 1, 4], name: '暴鲤龙', pokeId: 130 },
-    { type: 'ABAB', edges: [2, 0, 2, 0], name: '椰蛋树', pokeId: 103 },
+    { type: 'ABAB', edges: [3, 1, 3, 1], name: '鸭嘴火兽', nameEn: 'Magmar', pokeId: 126 },
+    { type: 'ABAB', edges: [4, 2, 4, 2], name: '呆壳兽', nameEn: 'Slowbro', pokeId: 80 },
+    { type: 'ABAB', edges: [0, 3, 0, 3], name: '飞天螳螂', nameEn: 'Scyther', pokeId: 123 },
+    { type: 'ABAB', edges: [1, 4, 1, 4], name: '暴鲤龙', nameEn: 'Gyarados', pokeId: 130 },
+    { type: 'ABAB', edges: [2, 0, 2, 0], name: '椰蛋树', nameEn: 'Exeggutor', pokeId: 103 },
 
     // 🗡️ 四、三同一异突刺牌 (AAAB) - 进阶突破形态
-    { type: 'AAAB', edges: [3, 3, 3, 4], name: '雷丘', pokeId: 26 },
-    { type: 'AAAB', edges: [4, 4, 4, 0], name: '卡卡龟', pokeId: 8 },
-    { type: 'AAAB', edges: [0, 0, 0, 1], name: '妙蛙草', pokeId: 2 },
-    { type: 'AAAB', edges: [1, 1, 1, 2], name: '火恐龙', pokeId: 5 },
-    { type: 'AAAB', edges: [2, 2, 2, 3], name: '隆隆石', pokeId: 75 },
-    { type: 'AAAB', edges: [3, 3, 3, 1], name: '胡地', pokeId: 65 },
-    { type: 'AAAB', edges: [4, 4, 4, 2], name: '水箭龟', pokeId: 9 },
-    { type: 'AAAB', edges: [0, 0, 0, 3], name: '妙蛙花', pokeId: 3 },
-    { type: 'AAAB', edges: [1, 1, 1, 4], name: '喷火龙', pokeId: 6 },
-    { type: 'AAAB', edges: [2, 2, 2, 0], name: '卡拉卡拉', pokeId: 104 },
+    { type: 'AAAB', edges: [3, 3, 3, 4], name: '雷丘', nameEn: 'Raichu', pokeId: 26 },
+    { type: 'AAAB', edges: [4, 4, 4, 0], name: '卡卡龟', nameEn: 'Wartortle', pokeId: 8 },
+    { type: 'AAAB', edges: [0, 0, 0, 1], name: '妙蛙草', nameEn: 'Ivysaur', pokeId: 2 },
+    { type: 'AAAB', edges: [1, 1, 1, 2], name: '火恐龙', nameEn: 'Charmeleon', pokeId: 5 },
+    { type: 'AAAB', edges: [2, 2, 2, 3], name: '隆隆石', nameEn: 'Graveler', pokeId: 75 },
+    { type: 'AAAB', edges: [3, 3, 3, 1], name: '胡地', nameEn: 'Alakazam', pokeId: 65 },
+    { type: 'AAAB', edges: [4, 4, 4, 2], name: '水箭龟', nameEn: 'Blastoise', pokeId: 9 },
+    { type: 'AAAB', edges: [0, 0, 0, 3], name: '妙蛙花', nameEn: 'Venusaur', pokeId: 3 },
+    { type: 'AAAB', edges: [1, 1, 1, 4], name: '喷火龙', nameEn: 'Charizard', pokeId: 6 },
+    { type: 'AAAB', edges: [2, 2, 2, 0], name: '卡拉卡拉', nameEn: 'Cubone', pokeId: 104 },
 
     // 🌈 五、四异彩虹全能牌 (ABCD) - 进化与神兽
-    { type: 'ABCD', edges: [3, 0, 4, 1], name: '伊布', pokeId: 133 },
-    { type: 'ABCD', edges: [0, 4, 1, 2], name: '快龙', pokeId: 149 },
-    { type: 'ABCD', edges: [4, 1, 2, 3], name: '耿鬼', pokeId: 94 },
-    { type: 'ABCD', edges: [1, 2, 3, 0], name: '风速狗', pokeId: 59 },
-    { type: 'ABCD', edges: [2, 3, 0, 4], name: '超梦', pokeId: 150 }
+    { type: 'ABCD', edges: [3, 0, 4, 1], name: '伊布', nameEn: 'Eevee', pokeId: 133 },
+    { type: 'ABCD', edges: [0, 4, 1, 2], name: '快龙', nameEn: 'Dragonite', pokeId: 149 },
+    { type: 'ABCD', edges: [4, 1, 2, 3], name: '耿鬼', nameEn: 'Gengar', pokeId: 94 },
+    { type: 'ABCD', edges: [1, 2, 3, 0], name: '风速狗', nameEn: 'Arcanine', pokeId: 59 },
+    { type: 'ABCD', edges: [2, 3, 0, 4], name: '超梦', nameEn: 'Mewtwo', pokeId: 150 }
 ];
 
 function doesOvercome(elemA, elemB) {
@@ -122,6 +345,7 @@ function generateBalanced30Deck() {
         id: idx + 1,
         type: def.type,
         name: def.name,
+        nameEn: def.nameEn,
         spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${def.pokeId}.png`,
         edges: [...def.edges]
     }));
@@ -137,6 +361,7 @@ function generateBalanced30Deck() {
 class GameEngine {
     constructor() {
         this.boardSize = 4;
+        this.language = 'zh';
         this.enableCombo = true;
         this.enableGenerationCombo = false;
         this.firstPlayerChoice = 'random';
@@ -190,7 +415,27 @@ class GameEngine {
         if (this.displayMode === 'number') {
             return ELEMENTS_DEFINITIONS[val].num;
         }
+        if (this.language === 'en') {
+            return ELEMENTS_DEFINITIONS[val].symbol;
+        }
         return ELEMENTS_DEFINITIONS[val].name;
+    }
+
+    getElementWord(val) {
+        const element = ELEMENTS_DEFINITIONS[val];
+        return this.language === 'en' ? element.nameEn : element.name;
+    }
+
+    getCardName(card) {
+        return this.language === 'en' ? (card.nameEn || card.name) : card.name;
+    }
+
+    getAIName(aiStyle = this.getAIStyleMeta()) {
+        return this.language === 'en' ? (aiStyle.nameEn || aiStyle.name) : aiStyle.name;
+    }
+
+    t(key, values = {}) {
+        return interpolate(UI_TEXT[this.language][key] ?? UI_TEXT.zh[key] ?? key, values);
     }
 
     getAIStyleMeta() {
@@ -198,26 +443,37 @@ class GameEngine {
     }
 
     formatLogName(name, owner) {
-        const ownerName = owner === 1 ? '玩家' : this.getAIStyleMeta().name;
-        return `<span class="log-name log-name-p${owner}">${name}[${ownerName}]</span>`;
+        const ownerName = owner === 1 ? this.t('player') : this.getAIName();
+        const open = this.language === 'en' ? ' (' : '（';
+        const close = this.language === 'en' ? ')' : '）';
+        return `<span class="log-name log-name-p${owner}">${name}<span class="log-owner">${open}${ownerName}${close}</span></span>`;
+    }
+
+    formatLogCard(card, owner) {
+        return this.formatLogName(this.getCardName(card), owner);
     }
 
     formatLogElement(element) {
-        return `<span class="log-element log-element-${element}">${this.getElemName(element)}</span>`;
+        return `<span class="log-element log-element-${element}">${this.getElementWord(element)}</span>`;
     }
 
     formatLogShield() {
-        return '<span class="shield-icon log-shield-icon" aria-label="护盾"></span>';
+        return `<span class="shield-icon log-shield-icon" aria-label="${this.t('shield')}"></span>`;
     }
 
     formatLogActor(owner) {
-        const name = owner === 1 ? '玩家' : this.getAIStyleMeta().name;
+        const name = owner === 1 ? this.t('player') : this.getAIName();
         return `<span class="log-name log-name-p${owner}">${name}</span>`;
     }
 
     async performOpeningDeal(renderCallback, triggerDrawAnimCallback, onLogMsg) {
         this.isProcessingAnim = true;
-        onLogMsg('🎴 游戏开始！双方正在抽取 5 张初始手牌...', 'system');
+        onLogMsg(
+            this.language === 'en'
+                ? '🎴 Game started. Both sides are drawing five cards…'
+                : '🎴 游戏开始！双方正在抽取 5 张初始手牌...',
+            'system'
+        );
 
         for (let slot = 0; slot < 5; slot++) {
             if (this.deck.length > 0) {
@@ -237,7 +493,12 @@ class GameEngine {
         }
 
         this.isProcessingAnim = false;
-        onLogMsg('✨ 发牌完成！点击手牌选定后落子。', 'system');
+        onLogMsg(
+            this.language === 'en'
+                ? '✨ Deal complete. Select a card, then choose an empty space.'
+                : '✨ 发牌完成！点击手牌选定后落子。',
+            'system'
+        );
         renderCallback();
     }
 
@@ -396,11 +657,18 @@ class GameEngine {
         this.totalPlaced++;
 
         const actorLogName = this.formatLogActor(activeOwner);
-        const cardLogName = this.formatLogName(card.name, activeOwner);
+        const cardLogName = this.formatLogCard(card, activeOwner);
         const firstShieldText = isFirstCardOfGame
-            ? `，${cardLogName}获得${this.formatLogShield()}（先手）`
+            ? (this.language === 'en'
+                ? ` ${cardLogName} receives ${this.formatLogShield()} for going first.`
+                : `，${cardLogName}获得${this.formatLogShield()}（先手）`)
             : '';
-        onLogMsg(`🃏 ${actorLogName}打出${cardLogName}，落在第 ${r+1} 行第 ${c+1} 列${firstShieldText}。`, activeOwner);
+        onLogMsg(
+            this.language === 'en'
+                ? `🃏 ${actorLogName} plays ${cardLogName} at row ${r+1}, column ${c+1}.${firstShieldText}`
+                : `🃏 ${actorLogName}打出${cardLogName}，落在第 ${r+1} 行第 ${c+1} 列${firstShieldText}。`,
+            activeOwner
+        );
         renderCallback();
 
         const chainQueue = [{ r, c }];
@@ -446,10 +714,12 @@ class GameEngine {
                             (stepCount === 1 || this.enableGenerationCombo)
                         ) {
                             if (doesGenerate(dir.myEdge, targetEdgeVal) && !targetCell.hasShield) {
-                                const sourceName = this.formatLogName(sourceCell.card.name, sourceCell.owner);
-                                const targetName = this.formatLogName(targetCell.card.name, targetCell.owner);
+                                const sourceName = this.formatLogCard(sourceCell.card, sourceCell.owner);
+                                const targetName = this.formatLogCard(targetCell.card, targetCell.owner);
                                 onLogMsg(
-                                    `🌟 ${sourceName}的${this.formatLogElement(dir.myEdge)}生${targetName}的${this.formatLogElement(targetEdgeVal)}，${targetName}获得${this.formatLogShield()}。`,
+                                    this.language === 'en'
+                                        ? `🌟 ${sourceName}'s ${this.formatLogElement(dir.myEdge)} generates ${targetName}'s ${this.formatLogElement(targetEdgeVal)}. ${targetName} receives ${this.formatLogShield()}.`
+                                        : `🌟 ${sourceName}的${this.formatLogElement(dir.myEdge)}生${targetName}的${this.formatLogElement(targetEdgeVal)}，${targetName}获得${this.formatLogShield()}。`,
                                     activeOwner
                                 );
                                 if (triggerShieldBeamCallback) {
@@ -460,10 +730,12 @@ class GameEngine {
                                 await this.sleep(400);
                             }
                             if (doesGenerate(targetEdgeVal, dir.myEdge) && !sourceCell.hasShield) {
-                                const sourceName = this.formatLogName(targetCell.card.name, targetCell.owner);
-                                const targetName = this.formatLogName(sourceCell.card.name, sourceCell.owner);
+                                const sourceName = this.formatLogCard(targetCell.card, targetCell.owner);
+                                const targetName = this.formatLogCard(sourceCell.card, sourceCell.owner);
                                 onLogMsg(
-                                    `🌟 ${sourceName}的${this.formatLogElement(targetEdgeVal)}生${targetName}的${this.formatLogElement(dir.myEdge)}，${targetName}获得${this.formatLogShield()}。`,
+                                    this.language === 'en'
+                                        ? `🌟 ${sourceName}'s ${this.formatLogElement(targetEdgeVal)} generates ${targetName}'s ${this.formatLogElement(dir.myEdge)}. ${targetName} receives ${this.formatLogShield()}.`
+                                        : `🌟 ${sourceName}的${this.formatLogElement(targetEdgeVal)}生${targetName}的${this.formatLogElement(dir.myEdge)}，${targetName}获得${this.formatLogShield()}。`,
                                     activeOwner
                                 );
                                 if (triggerShieldBeamCallback) {
@@ -476,14 +748,16 @@ class GameEngine {
                         }
                         else if (targetCell.owner !== sourceCell.owner) {
                             if (doesOvercome(dir.myEdge, targetEdgeVal)) {
-                                const sourceName = this.formatLogName(sourceCell.card.name, sourceCell.owner);
+                                const sourceName = this.formatLogCard(sourceCell.card, sourceCell.owner);
                                 const targetOwnerBeforeEffect = targetCell.owner;
-                                const targetName = this.formatLogName(targetCell.card.name, targetOwnerBeforeEffect);
+                                const targetName = this.formatLogCard(targetCell.card, targetOwnerBeforeEffect);
                                 if (targetCell.hasShield) {
                                     targetCell.hasShield = false;
                                     targetCell.shieldBreakAnim = true;
                                     onLogMsg(
-                                        `🛡️ ${sourceName}的${this.formatLogElement(dir.myEdge)}克${targetName}的${this.formatLogElement(targetEdgeVal)}，${targetName}的${this.formatLogShield()}挡下攻击并破碎。`,
+                                        this.language === 'en'
+                                            ? `🛡️ ${sourceName}'s ${this.formatLogElement(dir.myEdge)} overcomes ${targetName}'s ${this.formatLogElement(targetEdgeVal)}. ${targetName}'s ${this.formatLogShield()} blocks the attack and breaks.`
+                                            : `🛡️ ${sourceName}的${this.formatLogElement(dir.myEdge)}克${targetName}的${this.formatLogElement(targetEdgeVal)}，${targetName}的${this.formatLogShield()}挡下攻击并破碎。`,
                                         activeOwner
                                     );
                                     renderCallback();
@@ -497,7 +771,9 @@ class GameEngine {
 
                                     const isCombo = stepCount > 1;
                                     onLogMsg(
-                                        `${isCombo ? '💥 连锁：' : '⚔️ '}${sourceName}的${this.formatLogElement(dir.myEdge)}克${targetName}的${this.formatLogElement(targetEdgeVal)}，${targetName}被翻转，加入${this.formatLogActor(sourceCell.owner)}。`,
+                                        this.language === 'en'
+                                            ? `${isCombo ? '💥 Chain: ' : '⚔️ '}${sourceName}'s ${this.formatLogElement(dir.myEdge)} overcomes ${targetName}'s ${this.formatLogElement(targetEdgeVal)}. ${targetName} is flipped and joins ${this.formatLogActor(sourceCell.owner)}.`
+                                            : `${isCombo ? '💥 连锁：' : '⚔️ '}${sourceName}的${this.formatLogElement(dir.myEdge)}克${targetName}的${this.formatLogElement(targetEdgeVal)}，${targetName}被翻转，加入${this.formatLogActor(sourceCell.owner)}。`,
                                         activeOwner
                                     );
                                     
@@ -873,6 +1149,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const deckRemainingEl = document.getElementById('deck-remaining');
     const mobileDeckCountEl = document.getElementById('mobile-deck-count');
     const mobileDeckRemainingEl = document.getElementById('mobile-deck-remaining');
+    const btnLanguageToggle = document.getElementById('btn-language-toggle');
     const btnRotate = document.getElementById('btn-rotate');
     const mobileRotateHintEl = document.getElementById('mobile-rotate-hint');
     const btnRestart = document.getElementById('btn-restart');
@@ -904,6 +1181,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 📖 规则书弹窗节点
     const rulebookModalEl = document.getElementById('rulebook-modal');
+    const rulebookTitleEl = document.getElementById('rulebook-title');
+    const rulebookBodyEl = document.getElementById('rulebook-body');
     const btnCloseRules = document.getElementById('btn-close-rules');
     const btnUnderstood = document.getElementById('btn-understood');
 
@@ -933,6 +1212,50 @@ document.addEventListener('DOMContentLoaded', () => {
         createAIChoicePicker(selectAIStyleMobile, true)
     ];
 
+    function applyStaticTranslations() {
+        const languageText = UI_TEXT[game.language];
+        document.documentElement.lang = game.language === 'en' ? 'en' : 'zh-CN';
+        document.title = languageText.gameTitle;
+        document.querySelectorAll('[data-i18n]').forEach(element => {
+            const key = element.dataset.i18n;
+            if (languageText[key] !== undefined) element.textContent = languageText[key];
+        });
+        rulebookTitleEl.textContent = game.language === 'en'
+            ? '📖 Elemental Flip Arena — Rules'
+            : '📖 精灵翻翻阵 - 规则说明';
+        rulebookBodyEl.innerHTML = RULEBOOK_HTML[game.language];
+        btnLanguageToggle.textContent = game.language === 'en' ? '中文' : 'EN';
+        btnLanguageToggle.setAttribute(
+            'aria-label',
+            game.language === 'en' ? '切换到中文' : 'Switch to English'
+        );
+        mobileLatestLogEl.setAttribute(
+            'aria-label',
+            game.language === 'en' ? 'Open full battle log' : '打开完整战况日志'
+        );
+        btnOpenMobileSettings.setAttribute(
+            'aria-label',
+            game.language === 'en' ? 'Open settings' : '打开设置'
+        );
+        toggleGenerationComboEl.closest('label')?.setAttribute(
+            'title',
+            game.language === 'en'
+                ? 'Challenge rule: captured cards may generate Shields during chains'
+                : '挑战规则：连锁翻转的牌也能触发相生护盾'
+        );
+        refreshAIChoiceControls();
+    }
+
+    function resetLogsForLanguage() {
+        const message = game.language === 'en'
+            ? '🌐 Language switched to English.'
+            : '🌐 已切换为中文。';
+        logListEl.innerHTML = `<div class="log-entry log-system">${message}</div>`;
+        mobileLogListContainerEl.innerHTML = `<div class="log-entry log-system">${message}</div>`;
+        mobileLatestLogEl.className = 'mobile-latest-log';
+        mobileLatestLogTextEl.textContent = game.t('waiting');
+    }
+
     document.addEventListener('click', (event) => {
         aiPickerControls.forEach(control => {
             if (!control.root.contains(event.target)) control.close();
@@ -948,6 +1271,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.visualViewport.addEventListener('resize', fitMobileBoard);
     }
 
+    applyStaticTranslations();
     initGameFlow();
 
     // 🔒 通用关闭弹窗辅助函数（兼容 click 与 touchend）
@@ -1003,6 +1327,14 @@ document.addEventListener('DOMContentLoaded', () => {
     bindDismiss(btnCloseLogModal, mobileLogModalEl);
     bindDismiss(btnCloseLogModalConfirm, mobileLogModalEl);
 
+    btnLanguageToggle.addEventListener('click', () => {
+        game.language = game.language === 'zh' ? 'en' : 'zh';
+        applyStaticTranslations();
+        resetLogsForLanguage();
+        render();
+        requestAnimationFrame(fitMobileBoard);
+    });
+
     // ⚙️ 手机端折叠设置弹窗交互
     btnOpenMobileSettings.addEventListener('click', () => {
         selectElementModeMobile.value = game.displayMode;
@@ -1031,7 +1363,13 @@ document.addEventListener('DOMContentLoaded', () => {
     selectElementModeMobile.addEventListener('change', (e) => {
         selectElementModeEl.value = e.target.value;
         game.displayMode = e.target.value;
-        const msg = game.displayMode === 'number' ? '🔢 已切换至数字模式 (大压小 5克4克3克2克1克5)' : '☯️ 已切换至五行模式 (木火土金水)';
+        const msg = game.language === 'en'
+            ? (game.displayMode === 'number'
+                ? '🔢 Switched to Number mode (5→4→3→2→1→5).'
+                : '☯️ Switched to Five Elements mode.')
+            : (game.displayMode === 'number'
+                ? '🔢 已切换至数字模式 (大压小 5克4克3克2克1克5)'
+                : '☯️ 已切换至五行模式 (木火土金水)');
         showBanner(msg);
         addLogEntry(msg, 'system');
         render();
@@ -1040,7 +1378,10 @@ document.addEventListener('DOMContentLoaded', () => {
     selectFirstPlayerMobile.addEventListener('change', (e) => {
         selectFirstPlayerEl.value = e.target.value;
         game.firstPlayerChoice = e.target.value;
-        const logMsg = `⚙️ 游戏重置，先后手调整为：${selectFirstPlayerEl.options[selectFirstPlayerEl.selectedIndex].text}`;
+        const selectedText = selectFirstPlayerEl.options[selectFirstPlayerEl.selectedIndex].text;
+        const logMsg = game.language === 'en'
+            ? `⚙️ Game reset. First turn: ${selectedText}.`
+            : `⚙️ 游戏重置，先后手调整为：${selectedText}`;
         logListEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         mobileLogListContainerEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         hideModal(mobileSettingsModalEl);
@@ -1055,7 +1396,9 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleComboMobile.addEventListener('change', (e) => {
         toggleComboEl.checked = e.target.checked;
         game.enableCombo = e.target.checked;
-        const msg = game.enableCombo ? '⚡ 连锁翻牌模式已开启' : '🛑 连锁翻牌模式已关闭';
+        const msg = game.language === 'en'
+            ? (game.enableCombo ? '⚡ Flip Chain enabled.' : '🛑 Flip Chain disabled.')
+            : (game.enableCombo ? '⚡ 连锁翻牌模式已开启' : '🛑 连锁翻牌模式已关闭');
         showBanner(msg);
         addLogEntry(msg, 'system');
     });
@@ -1063,30 +1406,43 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleGenerationComboMobile.addEventListener('change', (e) => {
         toggleGenerationComboEl.checked = e.target.checked;
         game.enableGenerationCombo = e.target.checked;
-        const msg = game.enableGenerationCombo
-            ? '🌟 挑战规则：相生连锁已开启'
-            : '🛑 相生连锁已关闭';
+        const msg = game.language === 'en'
+            ? (game.enableGenerationCombo
+                ? '🌟 Challenge rule: Generation Chain enabled.'
+                : '🛑 Generation Chain disabled.')
+            : (game.enableGenerationCombo
+                ? '🌟 挑战规则：相生连锁已开启'
+                : '🛑 相生连锁已关闭');
         showBanner(msg);
         addLogEntry(msg, 'system');
     });
 
     btnModalRestart.addEventListener('click', () => {
         hideModal(mobileSettingsModalEl);
-        const logMsg = '☯️ 新游戏开始！准备进行开局发牌仪式...';
+        const logMsg = game.language === 'en'
+            ? '☯️ New game! Preparing the opening deal…'
+            : '☯️ 新游戏开始！准备进行开局发牌仪式...';
         logListEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         mobileLogListContainerEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         initGameFlow();
     });
 
     btnClearLogMobile.addEventListener('click', () => {
-        logListEl.innerHTML = '<div class="log-entry log-system">📜 历史日志已清空。</div>';
-        mobileLogListContainerEl.innerHTML = '<div class="log-entry log-system">📜 历史日志已清空。</div>';
+        const clearMsg = game.language === 'en' ? '📜 Battle log cleared.' : '📜 历史日志已清空。';
+        logListEl.innerHTML = `<div class="log-entry log-system">${clearMsg}</div>`;
+        mobileLogListContainerEl.innerHTML = `<div class="log-entry log-system">${clearMsg}</div>`;
     });
 
     // 🔢 桌面模式切换绑定 (五行 / 数字大压小 5克4克3克2克1克5)
     selectElementModeEl.addEventListener('change', (e) => {
         game.displayMode = e.target.value;
-        const msg = game.displayMode === 'number' ? '🔢 已切换至数字模式 (相克: 大压小 5克4克3克2克1克5)' : '☯️ 已切换至五行模式 (木火土金水)';
+        const msg = game.language === 'en'
+            ? (game.displayMode === 'number'
+                ? '🔢 Switched to Number mode (5→4→3→2→1→5).'
+                : '☯️ Switched to Five Elements mode.')
+            : (game.displayMode === 'number'
+                ? '🔢 已切换至数字模式 (相克: 大压小 5克4克3克2克1克5)'
+                : '☯️ 已切换至五行模式 (木火土金水)');
         showBanner(msg);
         addLogEntry(msg, 'system');
         render();
@@ -1098,7 +1454,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     selectFirstPlayerEl.addEventListener('change', (e) => {
         game.firstPlayerChoice = e.target.value;
-        const logMsg = `⚙️ 游戏重置，先后手调整为：${selectFirstPlayerEl.options[selectFirstPlayerEl.selectedIndex].text}`;
+        const selectedText = selectFirstPlayerEl.options[selectFirstPlayerEl.selectedIndex].text;
+        const logMsg = game.language === 'en'
+            ? `⚙️ Game reset. First turn: ${selectedText}.`
+            : `⚙️ 游戏重置，先后手调整为：${selectedText}`;
         logListEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         mobileLogListContainerEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         initGameFlow();
@@ -1110,7 +1469,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     toggleComboEl.addEventListener('change', (e) => {
         game.enableCombo = e.target.checked;
-        const msg = game.enableCombo ? '⚡ 连锁翻牌模式已开启' : '🛑 连锁翻牌模式已关闭';
+        const msg = game.language === 'en'
+            ? (game.enableCombo ? '⚡ Flip Chain enabled.' : '🛑 Flip Chain disabled.')
+            : (game.enableCombo ? '⚡ 连锁翻牌模式已开启' : '🛑 连锁翻牌模式已关闭');
         showBanner(msg);
         addLogEntry(msg, 'system');
     });
@@ -1118,16 +1479,21 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleGenerationComboEl.addEventListener('change', (e) => {
         toggleGenerationComboMobile.checked = e.target.checked;
         game.enableGenerationCombo = e.target.checked;
-        const msg = game.enableGenerationCombo
-            ? '🌟 挑战规则：相生连锁已开启'
-            : '🛑 相生连锁已关闭';
+        const msg = game.language === 'en'
+            ? (game.enableGenerationCombo
+                ? '🌟 Challenge rule: Generation Chain enabled.'
+                : '🛑 Generation Chain disabled.')
+            : (game.enableGenerationCombo
+                ? '🌟 挑战规则：相生连锁已开启'
+                : '🛑 相生连锁已关闭');
         showBanner(msg);
         addLogEntry(msg, 'system');
     });
 
     btnClearLog.addEventListener('click', () => {
-        logListEl.innerHTML = '<div class="log-entry log-system">📜 历史日志已清空。</div>';
-        mobileLogListContainerEl.innerHTML = '<div class="log-entry log-system">📜 历史日志已清空。</div>';
+        const clearMsg = game.language === 'en' ? '📜 Battle log cleared.' : '📜 历史日志已清空。';
+        logListEl.innerHTML = `<div class="log-entry log-system">${clearMsg}</div>`;
+        mobileLogListContainerEl.innerHTML = `<div class="log-entry log-system">${clearMsg}</div>`;
     });
 
     window.addEventListener('keydown', (e) => {
@@ -1138,7 +1504,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnRotate.addEventListener('click', rotateSelectedCard);
     btnRestart.addEventListener('click', () => { 
-        const logMsg = '☯️ 新游戏开始！准备进行开局发牌仪式...';
+        const logMsg = game.language === 'en'
+            ? '☯️ New game! Preparing the opening deal…'
+            : '☯️ 新游戏开始！准备进行开局发牌仪式...';
         logListEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         mobileLogListContainerEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         initGameFlow(); 
@@ -1146,7 +1514,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     modalBtnRestart.addEventListener('click', () => {
         hideModal(modalEl);
-        const logMsg = '☯️ 新游戏开始！准备进行开局发牌仪式...';
+        const logMsg = game.language === 'en'
+            ? '☯️ New game! Preparing the opening deal…'
+            : '☯️ 新游戏开始！准备进行开局发牌仪式...';
         logListEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         mobileLogListContainerEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         initGameFlow();
@@ -1159,12 +1529,14 @@ document.addEventListener('DOMContentLoaded', () => {
         syncAIChoiceControls(choice);
 
         const randomChoiceLabels = {
-            random: '🎲 入门随机',
-            'advanced-random': '🎲 高级随机'
+            random: `🎲 ${game.t('beginnerRandom')}`,
+            'advanced-random': `🎲 ${game.t('advancedRandom')}`
         };
         const choiceText = randomChoiceLabels[choice]
-            || `${AI_STYLE_DEFINITIONS[choice].icon} ${AI_STYLE_DEFINITIONS[choice].name}`;
-        const logMsg = `🤖 游戏重置，对手调整为：${choiceText}`;
+            || `${AI_STYLE_DEFINITIONS[choice].icon} ${game.getAIName(AI_STYLE_DEFINITIONS[choice])}`;
+        const logMsg = game.language === 'en'
+            ? `🤖 Game reset. Opponent changed to ${choiceText}.`
+            : `🤖 游戏重置，对手调整为：${choiceText}`;
         logListEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         mobileLogListContainerEl.innerHTML = `<div class="log-entry log-system">${logMsg}</div>`;
         initGameFlow();
@@ -1172,20 +1544,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getAIChoiceContent(choice) {
         if (choice === 'random') {
-            return `${createRandomAvatarStack(BEGINNER_AI_STYLE_KEYS)}<span>入门随机</span>`;
+            return `${createRandomAvatarStack(BEGINNER_AI_STYLE_KEYS, game.language)}<span>${game.t('beginnerRandom')}</span>`;
         }
         if (choice === 'advanced-random') {
-            return `${createRandomAvatarStack(ADVANCED_AI_STYLE_KEYS)}<span>高级随机</span>`;
+            return `${createRandomAvatarStack(ADVANCED_AI_STYLE_KEYS, game.language)}<span>${game.t('advancedRandom')}</span>`;
         }
 
         const aiStyle = AI_STYLE_DEFINITIONS[choice];
-        return `${createAIAvatarHtml(aiStyle)}<span>${aiStyle.name}</span>`;
+        return `${createAIAvatarHtml(aiStyle, game.language)}<span>${game.getAIName(aiStyle)}</span>`;
+    }
+
+    function refreshAIChoiceControls() {
+        [selectAIStyleEl, selectAIStyleMobile].forEach(select => {
+            Array.from(select.options).forEach(option => {
+                if (option.value === 'random') option.textContent = game.t('beginnerRandom');
+                else if (option.value === 'advanced-random') option.textContent = game.t('advancedRandom');
+                else if (AI_STYLE_DEFINITIONS[option.value]) {
+                    option.textContent = game.getAIName(AI_STYLE_DEFINITIONS[option.value]);
+                }
+            });
+            const groups = select.querySelectorAll('optgroup');
+            if (groups[0]) groups[0].label = game.t('beginnerGroup');
+            if (groups[1]) groups[1].label = game.t('advancedGroup');
+        });
+
+        document.querySelectorAll('.ai-picker').forEach(picker => {
+            const groupLabels = picker.querySelectorAll('.ai-picker-group-label');
+            if (groupLabels[0]) groupLabels[0].textContent = game.t('beginnerGroup');
+            if (groupLabels[1]) groupLabels[1].textContent = game.t('advancedGroup');
+            picker.querySelectorAll('.ai-picker-option').forEach(option => {
+                option.innerHTML = getAIChoiceContent(option.dataset.choice);
+            });
+        });
+        syncAIChoiceControls(game.aiStyleChoice);
     }
 
     function createAIChoicePicker(selectEl, closeMobileSettingsOnChoice = false) {
         const groups = [
-            { label: '入门对手', choices: ['random', ...BEGINNER_AI_STYLE_KEYS] },
-            { label: '高级对手', choices: ['advanced-random', ...ADVANCED_AI_STYLE_KEYS] }
+            { label: game.t('beginnerGroup'), choices: ['random', ...BEGINNER_AI_STYLE_KEYS] },
+            { label: game.t('advancedGroup'), choices: ['advanced-random', ...ADVANCED_AI_STYLE_KEYS] }
         ];
         const picker = document.createElement('div');
         picker.className = 'ai-picker';
@@ -1258,11 +1655,16 @@ document.addEventListener('DOMContentLoaded', () => {
     async function initGameFlow() {
         game.resetGame();
         mobileLatestLogEl.className = 'mobile-latest-log';
-        mobileLatestLogTextEl.textContent = '等待第一步……';
+        mobileLatestLogTextEl.textContent = game.t('waiting');
         render();
         requestAnimationFrame(fitMobileBoard);
         const aiStyle = game.getAIStyleMeta();
-        addLogEntry(`🤖 本局对手：${aiStyle.icon} ${aiStyle.name}`, 'system');
+        addLogEntry(
+            game.language === 'en'
+                ? `🤖 Opponent: ${aiStyle.icon} ${game.getAIName(aiStyle)}`
+                : `🤖 本局对手：${aiStyle.icon} ${game.getAIName(aiStyle)}`,
+            'system'
+        );
         await game.performOpeningDeal(
             () => render(),
             (owner, slotIdx, duration) => triggerDrawFlyingAnim(owner, slotIdx, duration),
@@ -1296,12 +1698,14 @@ document.addEventListener('DOMContentLoaded', () => {
         mobileRotateHintEl.classList.remove('is-teaching');
 
         if (game.selectedCardIndex !== null && game.currentTurn === 1) {
-            mobileRotateHintEl.textContent = '↻ 再点此牌顺时针旋转';
+            mobileRotateHintEl.textContent = game.language === 'en'
+                ? '↻ Tap again to rotate'
+                : '↻ 再点此牌顺时针旋转';
             if (!hasSeenRotateHint()) {
                 mobileRotateHintEl.classList.add('is-teaching');
             }
         } else {
-            mobileRotateHintEl.textContent = '点牌选择';
+            mobileRotateHintEl.textContent = game.t('tapCard');
         }
     }
 
@@ -1431,6 +1835,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function showBanner(msg) {
         const richTextContainer = document.createElement('div');
         richTextContainer.innerHTML = msg;
+        richTextContainer.querySelectorAll('.shield-icon').forEach(icon => {
+            icon.textContent = '🛡️';
+        });
         combatBannerEl.textContent = richTextContainer.textContent || '';
         combatBannerEl.classList.remove('hidden');
         setTimeout(() => {
@@ -1449,6 +1856,72 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderLegend() {
         let legendHtml;
         let mobileLegendHtml;
+        if (game.language === 'en') {
+            if (game.displayMode === 'number') {
+                legendHtml = `
+                    <div class="legend-row">
+                        <span class="legend-label">⚔️ Overcomes:</span>
+                        <span class="elem-tag elem-earth">5</span><span class="arrow">→</span>
+                        <span class="elem-tag elem-water">4</span><span class="arrow">→</span>
+                        <span class="elem-tag elem-fire">3</span><span class="arrow">→</span>
+                        <span class="elem-tag elem-metal">2</span><span class="arrow">→</span>
+                        <span class="elem-tag elem-wood">1</span><span class="arrow">→</span>
+                        <span class="elem-tag elem-earth">5</span>
+                    </div>
+                    <div class="legend-row">
+                        <span class="legend-label">🌟 Generates:</span>
+                        <span class="elem-tag elem-wood">1</span><span class="arrow">→</span>
+                        <span class="elem-tag elem-fire">3</span><span class="arrow">→</span>
+                        <span class="elem-tag elem-earth">5</span><span class="arrow">→</span>
+                        <span class="elem-tag elem-metal">2</span><span class="arrow">→</span>
+                        <span class="elem-tag elem-water">4</span><span class="arrow">→</span>
+                        <span class="elem-tag elem-wood">1</span>
+                    </div>`;
+                mobileLegendHtml = `
+                    <div class="legend-row">
+                        <span class="legend-label">Generate<span class="shield-icon mobile-legend-shield" aria-label="Shield"></span></span>
+                        <span class="elem-tag elem-wood">1</span><span class="arrow">→</span>
+                        <span class="elem-tag elem-fire">3</span><span class="arrow">→</span>
+                        <span class="elem-tag elem-earth">5</span><span class="arrow">→</span>
+                        <span class="elem-tag elem-metal">2</span><span class="arrow">→</span>
+                        <span class="elem-tag elem-water">4</span><span class="arrow">→</span>
+                        <span class="elem-tag elem-wood">1</span>
+                    </div>
+                    <div class="legend-row">
+                        <span class="legend-label">Overcome<span class="mobile-flip-icon" aria-label="Flip">↻</span></span>
+                        <span class="elem-tag elem-earth">5</span><span class="arrow">→</span>
+                        <span class="elem-tag elem-water">4</span><span class="arrow">→</span>
+                        <span class="elem-tag elem-fire">3</span><span class="arrow">→</span>
+                        <span class="elem-tag elem-metal">2</span><span class="arrow">→</span>
+                        <span class="elem-tag elem-wood">1</span><span class="arrow">→</span>
+                        <span class="elem-tag elem-earth">5</span>
+                    </div>`;
+            } else {
+                const generating = [
+                    ['elem-wood', '🌿 Wood'], ['elem-fire', '🔥 Fire'],
+                    ['elem-earth', '⛰️ Earth'], ['elem-metal', '⚔️ Metal'],
+                    ['elem-water', '💧 Water'], ['elem-wood', '🌿 Wood']
+                ];
+                const overcoming = [
+                    ['elem-wood', '🌿 Wood'], ['elem-earth', '⛰️ Earth'],
+                    ['elem-water', '💧 Water'], ['elem-fire', '🔥 Fire'],
+                    ['elem-metal', '⚔️ Metal'], ['elem-wood', '🌿 Wood']
+                ];
+                const cycleHtml = cycle => cycle
+                    .map(([cls, label], index) => `${index ? '<span class="arrow">→</span>' : ''}<span class="elem-tag ${cls}">${label}</span>`)
+                    .join('');
+                legendHtml = `
+                    <div class="legend-row"><span class="legend-label">🌟 Generating Cycle:</span>${cycleHtml(generating)}</div>
+                    <div class="legend-row"><span class="legend-label">⚔️ Overcoming Cycle:</span>${cycleHtml(overcoming)}</div>`;
+                mobileLegendHtml = `
+                    <div class="legend-row"><span class="legend-label">Generate<span class="shield-icon mobile-legend-shield" aria-label="Shield"></span></span>${cycleHtml(generating)}</div>
+                    <div class="legend-row"><span class="legend-label">Overcome<span class="mobile-flip-icon" aria-label="Flip">↻</span></span>${cycleHtml(overcoming)}</div>`;
+            }
+            elementsLegendEl.innerHTML = legendHtml;
+            mobileElementsLegendEl.innerHTML = mobileLegendHtml;
+            return;
+        }
+
         if (game.displayMode === 'number') {
             legendHtml = `
                 <div class="legend-row">
@@ -1604,18 +2077,36 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!game.previewState) return;
 
         const outcome = game.previewState;
-        let msg = `🔮 放置：`;
+        let msg = game.language === 'en' ? '🔮 Place: ' : '🔮 放置：';
         const parts = [];
-        if (outcome.maxChainLevel > 1) parts.push(`触发 ${outcome.maxChainLevel} 级连锁`);
-        if (outcome.flipCells.length > 0) parts.push(`翻转 ${outcome.flipCells.length} 张敌牌`);
-        if (outcome.shieldCells.length > 0) parts.push(`加盾 ${outcome.shieldCells.length} 张`);
-        if (outcome.breakCells.length > 0) parts.push(`击碎 ${outcome.breakCells.length} 个敌方护盾`);
+        if (outcome.maxChainLevel > 1) {
+            parts.push(game.language === 'en'
+                ? `chain level ${outcome.maxChainLevel}`
+                : `触发 ${outcome.maxChainLevel} 级连锁`);
+        }
+        if (outcome.flipCells.length > 0) {
+            parts.push(game.language === 'en'
+                ? `flip ${outcome.flipCells.length}`
+                : `翻转 ${outcome.flipCells.length} 张敌牌`);
+        }
+        if (outcome.shieldCells.length > 0) {
+            parts.push(game.language === 'en'
+                ? `shield ${outcome.shieldCells.length}`
+                : `加盾 ${outcome.shieldCells.length} 张`);
+        }
+        if (outcome.breakCells.length > 0) {
+            parts.push(game.language === 'en'
+                ? `break ${outcome.breakCells.length} Shield${outcome.breakCells.length > 1 ? 's' : ''}`
+                : `击碎 ${outcome.breakCells.length} 个敌方护盾`);
+        }
 
-        if (game.totalPlaced === 0) parts.unshift('获得先手护盾');
-        if (parts.length === 0) msg += `无额外效果`;
+        if (game.totalPlaced === 0) {
+            parts.unshift(game.language === 'en' ? 'gain first-move Shield' : '获得先手护盾');
+        }
+        if (parts.length === 0) msg += game.language === 'en' ? 'no extra effect' : '无额外效果';
         else msg += parts.join(' · ');
 
-        msg += `（再次点击确认）`;
+        msg += game.language === 'en' ? ' (tap again to confirm)' : '（再次点击确认）';
 
         showBanner(msg);
         applyPreviewUIState();
@@ -1783,12 +2274,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const aiStyle = game.getAIStyleMeta();
         p1ScoreEl.textContent = scores.p1;
         p2ScoreEl.textContent = scores.p2;
-        const avatarHtml = createAIAvatarHtml(aiStyle);
-        aiStyleLabelEl.innerHTML = `${avatarHtml}<span>${aiStyle.name}</span>`;
-        aiHandTitleEl.innerHTML = `${avatarHtml}<span>${aiStyle.name} 手牌</span>`;
+        const aiName = game.getAIName(aiStyle);
+        const avatarHtml = createAIAvatarHtml(aiStyle, game.language);
+        aiStyleLabelEl.innerHTML = `${avatarHtml}<span>${aiName}</span>`;
+        aiHandTitleEl.innerHTML = game.language === 'en'
+            ? `${avatarHtml}<span>${aiName}'s Hand</span>`
+            : `${avatarHtml}<span>${aiName} 手牌</span>`;
         deckRemainingEl.textContent = game.deck.length;
         mobileDeckRemainingEl.textContent = game.deck.length;
-        mobileDeckCountEl.setAttribute('aria-label', `抽牌堆剩余${game.deck.length}张`);
+        mobileDeckCountEl.setAttribute(
+            'aria-label',
+            game.language === 'en'
+                ? `${game.deck.length} cards left in the deck`
+                : `抽牌堆剩余${game.deck.length}张`
+        );
 
         if (game.gameOver) {
             showEndGameModal(scores);
@@ -1801,17 +2300,18 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const activeEdges = game.getEffectiveEdges(card, rotation);
 
+        const cardName = game.getCardName(card);
         cardEl.innerHTML = `
-            ${isHand ? `<div class="card-top-name-bar">${card.name}</div>` : ''}
+            ${isHand ? `<div class="card-top-name-bar">${cardName}</div>` : ''}
             <div class="card-body-content">
-                ${hasShield ? '<div class="shield-icon" aria-label="护盾"></div>' : ''}
+                ${hasShield ? `<div class="shield-icon" aria-label="${game.t('shield')}"></div>` : ''}
                 <div class="edge-badge edge-top ${ELEMENTS_DEFINITIONS[activeEdges.top].color}">${game.getElemName(activeEdges.top)}</div>
                 <div class="edge-badge edge-right ${ELEMENTS_DEFINITIONS[activeEdges.right].color}">${game.getElemName(activeEdges.right)}</div>
                 <div class="edge-badge edge-bottom ${ELEMENTS_DEFINITIONS[activeEdges.bottom].color}">${game.getElemName(activeEdges.bottom)}</div>
                 <div class="edge-badge edge-left ${ELEMENTS_DEFINITIONS[activeEdges.left].color}">${game.getElemName(activeEdges.left)}</div>
                 
                 <div class="card-sprite-container">
-                    <img class="card-sprite-img" src="${card.spriteUrl}" alt="${card.name}" />
+                    <img class="card-sprite-img" src="${card.spriteUrl}" alt="${cardName}" />
                 </div>
             </div>
         `;
@@ -1820,20 +2320,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showEndGameModal(scores) {
-        const opponentName = game.getAIStyleMeta().name;
+        const opponentName = game.getAIName();
         showModal(modalEl);
         if (scores.p1 > scores.p2) {
-            modalTitleEl.textContent = '🎉 恭喜大获全胜！';
-            modalBodyEl.innerHTML = `你在 4×4 棋盘中最终控制了 <b style="color:#2563eb;font-size:1.4rem">${scores.p1}</b> 张牌！<br>${opponentName}仅控制了 ${scores.p2} 张牌。`;
-            addLogEntry(`🎉 游戏结束，玩家以 ${scores.p1}:${scores.p2} 大获全胜！`, 1);
+            modalTitleEl.textContent = game.language === 'en' ? '🎉 Victory!' : '🎉 恭喜大获全胜！';
+            modalBodyEl.innerHTML = game.language === 'en'
+                ? `You control <b style="color:#2563eb;font-size:1.4rem">${scores.p1}</b> cards on the 4×4 board.<br>${opponentName} controls ${scores.p2}.`
+                : `你在 4×4 棋盘中最终控制了 <b style="color:#2563eb;font-size:1.4rem">${scores.p1}</b> 张牌！<br>${opponentName}仅控制了 ${scores.p2} 张牌。`;
+            addLogEntry(
+                game.language === 'en'
+                    ? `🎉 Game over. Player wins ${scores.p1}:${scores.p2}!`
+                    : `🎉 游戏结束，玩家以 ${scores.p1}:${scores.p2} 大获全胜！`,
+                1
+            );
         } else if (scores.p2 > scores.p1) {
-            modalTitleEl.textContent = '💔 遗憾惜败！';
-            modalBodyEl.innerHTML = `${opponentName}控制了 <b style="color:#dc2626;font-size:1.4rem">${scores.p2}</b> 张牌。<br>你控制了 ${scores.p1} 张牌，再接再励！`;
-            addLogEntry(`💔 游戏结束，${opponentName}以 ${scores.p2}:${scores.p1} 获胜！`, 2);
+            modalTitleEl.textContent = game.language === 'en' ? '💔 Defeat' : '💔 遗憾惜败！';
+            modalBodyEl.innerHTML = game.language === 'en'
+                ? `${opponentName} controls <b style="color:#e11d48;font-size:1.4rem">${scores.p2}</b> cards.<br>You control ${scores.p1}. Try again!`
+                : `${opponentName}控制了 <b style="color:#e11d48;font-size:1.4rem">${scores.p2}</b> 张牌。<br>你控制了 ${scores.p1} 张牌，再接再励！`;
+            addLogEntry(
+                game.language === 'en'
+                    ? `💔 Game over. ${opponentName} wins ${scores.p2}:${scores.p1}.`
+                    : `💔 游戏结束，${opponentName}以 ${scores.p2}:${scores.p1} 获胜！`,
+                2
+            );
         } else {
-            modalTitleEl.textContent = '🤝 势均力敌 - 平局！';
-            modalBodyEl.innerHTML = `双方各自控制了 <b>${scores.p1}</b> 张牌！`;
-            addLogEntry(`🤝 游戏结束，双方 ${scores.p1}:${scores.p2} 战平！`, 'system');
+            modalTitleEl.textContent = game.language === 'en' ? '🤝 Draw!' : '🤝 势均力敌 - 平局！';
+            modalBodyEl.innerHTML = game.language === 'en'
+                ? `Both sides control <b>${scores.p1}</b> cards.`
+                : `双方各自控制了 <b>${scores.p1}</b> 张牌！`;
+            addLogEntry(
+                game.language === 'en'
+                    ? `🤝 Game over. Draw at ${scores.p1}:${scores.p2}.`
+                    : `🤝 游戏结束，双方 ${scores.p1}:${scores.p2} 战平！`,
+                'system'
+            );
         }
     }
 });

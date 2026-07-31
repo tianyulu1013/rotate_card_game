@@ -9,7 +9,7 @@
     <title>精灵翻翻阵</title>
     <script>
         (() => {
-            const pageVersion = '20260730-5';
+            const pageVersion = '20260730-6';
             const url = new URL(window.location.href);
             if (url.searchParams.get('v') !== pageVersion) {
                 url.searchParams.set('v', pageVersion);
@@ -18,7 +18,7 @@
         })();
     </script>
     <!-- 使用版本化文件名，兼容简单静态服务器并绕过手机浏览器缓存 -->
-    <link rel="stylesheet" href="index.logs-v7.css?v=20260730-5">
+    <link rel="stylesheet" href="index.i18n-v8.css?v=20260730-6">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
@@ -32,13 +32,13 @@
         <header class="game-header">
             <div class="logo">
                 <span class="logo-icon">☯️</span>
-                <h1>精灵翻翻阵</h1>
+                <h1 data-i18n="gameTitle">精灵翻翻阵</h1>
             </div>
             
             <div class="status-bar">
                 <div class="player-score p1-score">
                     <span class="player-dot p1-dot"></span>
-                    <span class="player-name">玩家</span>
+                    <span class="player-name" data-i18n="player">玩家</span>
                     <span id="p1-card-count" class="score-num">0</span>
                 </div>
                 
@@ -50,27 +50,28 @@
             </div>
 
             <div class="header-actions">
+                <button id="btn-language-toggle" class="btn btn-secondary language-toggle" type="button" aria-label="Switch to English">EN</button>
                 <!-- 桌面版平铺选项 / 手机版收纳到 ⚙️ 设置 -->
                 <div class="desktop-header-controls">
                     <div class="header-select-group">
-                        <span class="select-label">显示:</span>
+                        <span class="select-label" data-i18n="displayLabel">显示:</span>
                         <select id="select-element-mode" class="custom-select">
-                            <option value="wuxing">☯️ 五行</option>
-                            <option value="number">🔢 数字</option>
+                            <option value="wuxing" data-i18n="modeFiveElements">☯️ 五行</option>
+                            <option value="number" data-i18n="modeNumbers">🔢 数字</option>
                         </select>
                     </div>
 
                     <div class="header-select-group">
-                        <span class="select-label">先手:</span>
+                        <span class="select-label" data-i18n="firstPlayerLabel">先手:</span>
                         <select id="select-first-player" class="custom-select">
-                            <option value="1">玩家</option>
-                            <option value="2">对手</option>
-                            <option value="random" selected>🎲 随机</option>
+                            <option value="1" data-i18n="player">玩家</option>
+                            <option value="2" data-i18n="opponent">对手</option>
+                            <option value="random" selected data-i18n="random">🎲 随机</option>
                         </select>
                     </div>
 
                     <div class="header-select-group">
-                        <span class="select-label">对手:</span>
+                        <span class="select-label" data-i18n="opponentLabel">对手:</span>
                         <select id="select-ai-style" class="custom-select">
                             <optgroup label="入门对手">
                                 <option value="random">入门随机</option>
@@ -90,21 +91,21 @@
                     <label class="toggle-switch">
                         <input type="checkbox" id="toggle-combo" checked>
                         <span class="slider"></span>
-                        <span class="toggle-label">翻牌连锁</span>
+                        <span class="toggle-label" data-i18n="flipChain">翻牌连锁</span>
                     </label>
 
                     <label class="toggle-switch" title="挑战规则：连锁翻转的牌也能触发相生护盾">
                         <input type="checkbox" id="toggle-generation-combo">
                         <span class="slider"></span>
-                        <span class="toggle-label">相生连锁</span>
+                        <span class="toggle-label" data-i18n="generateChain">相生连锁</span>
                     </label>
 
-                    <button id="btn-open-rules" class="btn btn-secondary">📖 规则</button>
-                    <button id="btn-restart" class="btn btn-secondary">重新开局</button>
+                    <button id="btn-open-rules" class="btn btn-secondary" data-i18n="rulesButton">📖 规则</button>
+                    <button id="btn-restart" class="btn btn-secondary" data-i18n="restartButton">重新开局</button>
                 </div>
 
                 <!-- 📱 手机端单一 ⚙️ 设置按钮 (点击展开所有功能) -->
-                <button id="btn-open-mobile-settings" class="btn btn-primary mobile-settings-btn">
+                <button id="btn-open-mobile-settings" class="btn btn-primary mobile-settings-btn" data-i18n="settingsButton">
                     ⚙️ 设置
                 </button>
             </div>
@@ -115,9 +116,9 @@
             <!-- AI 手牌区 -->
             <section class="hand-section ai-hand-section">
                 <div class="section-title ai-hand-header">
-                    <span id="ai-hand-title">对手手牌</span>
+                    <span id="ai-hand-title" data-i18n="opponentHand">对手手牌</span>
                     <span id="mobile-deck-count" class="mobile-deck-count" aria-label="抽牌堆剩余20张">
-                        🎴<span class="mobile-deck-label">抽牌堆</span><span id="mobile-deck-remaining">20</span>
+                        🎴<span class="mobile-deck-label" data-i18n="deck">抽牌堆</span><span id="mobile-deck-remaining">20</span>
                     </span>
                 </div>
                 <div class="hand-container" id="ai-hand">
@@ -130,7 +131,7 @@
             <div class="center-content-wrapper">
                 <!-- 🎴 桌面3D摸牌堆；手机端只在对手手牌标题显示剩余数量 -->
                 <aside class="deck-pile-section">
-                    <div class="deck-pile-title">🎴 摸牌堆</div>
+                    <div class="deck-pile-title" data-i18n="drawPile">🎴 摸牌堆</div>
                     <div class="deck-3d-stack" id="deck-stack">
                         <div class="deck-card-layer layer-3"></div>
                         <div class="deck-card-layer layer-2"></div>
@@ -141,7 +142,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="deck-count-badge">余 <span id="deck-remaining">20</span> 张</div>
+                    <div class="deck-count-badge"><span data-i18n="remainingPrefix">余</span> <span id="deck-remaining">20</span> <span data-i18n="cardsSuffix">张</span></div>
                 </aside>
 
                 <button id="mobile-latest-log" class="mobile-latest-log" type="button" aria-label="打开完整战况日志">
@@ -164,8 +165,8 @@
                 <!-- 📜 战况历史日志面板 (仅桌面端侧边显示) -->
                 <aside class="combat-log-section desktop-only-log">
                     <div class="log-header">
-                        <span class="log-title">📜 战况历史日志</span>
-                        <button id="btn-clear-log" class="btn-text">清空</button>
+                        <span class="log-title" data-i18n="battleLogTitle">📜 战况历史日志</span>
+                        <button id="btn-clear-log" class="btn-text" data-i18n="clear">清空</button>
                     </div>
                     <div class="log-list-container" id="log-list">
                         <div class="log-entry log-system">☯️ 游戏开始，双方抽满 5 张手牌。</div>
@@ -176,11 +177,11 @@
             <!-- 玩家手牌与旋转控制区 -->
             <section class="hand-section player-hand-section">
                 <div class="hand-controls">
-                    <span class="section-title">玩家手牌</span>
+                    <span class="section-title" data-i18n="playerHand">玩家手牌</span>
                     <div class="rotate-control-group">
-                        <span id="mobile-rotate-hint" class="mobile-rotate-hint">点牌选择</span>
+                        <span id="mobile-rotate-hint" class="mobile-rotate-hint" data-i18n="tapCard">点牌选择</span>
                         <button id="btn-rotate" class="btn btn-action" disabled>
-                            <span class="icon">🔄</span> <span class="rotate-text-main">旋转 90°</span><span class="desktop-only-key"> (快捷键 R)</span>
+                            <span class="icon">🔄</span> <span class="rotate-text-main" data-i18n="rotate90">旋转 90°</span><span class="desktop-only-key" data-i18n="shortcutR"> (快捷键 R)</span>
                         </button>
                     </div>
                 </div>
@@ -200,42 +201,42 @@
         <div id="mobile-settings-modal" class="modal-overlay hidden">
             <div class="modal-card mobile-settings-card">
                 <div class="rulebook-header">
-                    <h2>⚙️ 游戏设置与工具</h2>
+                    <h2 data-i18n="settingsTitle">⚙️ 游戏设置与工具</h2>
                     <button id="btn-close-mobile-settings" class="btn-close">&times;</button>
                 </div>
 
                 <div class="settings-body">
                     <div class="settings-item">
-                        <button id="btn-modal-open-rules" class="btn btn-secondary btn-full">
+                        <button id="btn-modal-open-rules" class="btn btn-secondary btn-full" data-i18n="rulesExplanation">
                             📖 玩法规则说明
                         </button>
                     </div>
 
                     <div class="settings-item">
-                        <button id="btn-modal-open-log" class="btn btn-secondary btn-full">
+                        <button id="btn-modal-open-log" class="btn btn-secondary btn-full" data-i18n="battleLogTitle">
                             📜 战况历史日志
                         </button>
                     </div>
 
                     <div class="settings-item-row">
-                        <span class="setting-label">显示模式:</span>
+                        <span class="setting-label" data-i18n="displayModeLabel">显示模式:</span>
                         <select id="select-element-mode-mobile" class="custom-select select-mobile-full">
-                            <option value="wuxing">☯️ 五行 (木火土金水)</option>
-                            <option value="number">🔢 数字 (5克4克3克2克1)</option>
+                            <option value="wuxing" data-i18n="modeFiveElementsLong">☯️ 五行 (木火土金水)</option>
+                            <option value="number" data-i18n="modeNumbersLong">🔢 数字 (5克4克3克2克1)</option>
                         </select>
                     </div>
 
                     <div class="settings-item-row">
-                        <span class="setting-label">先后手:</span>
+                        <span class="setting-label" data-i18n="turnOrderLabel">先后手:</span>
                         <select id="select-first-player-mobile" class="custom-select select-mobile-full">
-                            <option value="1">玩家先手 (蓝)</option>
-                            <option value="2">对手先手 (红)</option>
-                            <option value="random" selected>🎲 随机先手</option>
+                            <option value="1" data-i18n="playerFirst">玩家先手 (蓝)</option>
+                            <option value="2" data-i18n="opponentFirst">对手先手 (红)</option>
+                            <option value="random" selected data-i18n="randomFirst">🎲 随机先手</option>
                         </select>
                     </div>
 
                     <div class="settings-item-row">
-                        <span class="setting-label">选择对手:</span>
+                        <span class="setting-label" data-i18n="chooseOpponent">选择对手:</span>
                         <select id="select-ai-style-mobile" class="custom-select select-mobile-full">
                             <optgroup label="入门对手">
                                 <option value="random">入门随机</option>
@@ -253,32 +254,32 @@
                     </div>
 
                     <div class="settings-item-row">
-                        <span class="setting-label">连锁翻牌:</span>
+                        <span class="setting-label" data-i18n="flipChainLabel">连锁翻牌:</span>
                         <label class="toggle-switch">
                             <input type="checkbox" id="toggle-combo-mobile" checked>
                             <span class="slider"></span>
-                            <span class="toggle-label">开启连锁</span>
+                            <span class="toggle-label" data-i18n="enableChain">开启连锁</span>
                         </label>
                     </div>
 
                     <div class="settings-item-row">
-                        <span class="setting-label">相生连锁:</span>
+                        <span class="setting-label" data-i18n="generateChainLabel">相生连锁:</span>
                         <label class="toggle-switch">
                             <input type="checkbox" id="toggle-generation-combo-mobile">
                             <span class="slider"></span>
-                            <span class="toggle-label">挑战自我</span>
+                            <span class="toggle-label" data-i18n="challengeYourself">挑战自我</span>
                         </label>
                     </div>
 
                     <div class="settings-item" style="margin-top:0.5rem">
-                        <button id="btn-modal-restart" class="btn btn-action btn-full">
+                        <button id="btn-modal-restart" class="btn btn-action btn-full" data-i18n="restartGame">
                             🔄 重新开始游戏
                         </button>
                     </div>
                 </div>
 
                 <div class="rulebook-footer">
-                    <button id="btn-close-mobile-settings-confirm" class="btn btn-primary btn-full">完成</button>
+                    <button id="btn-close-mobile-settings-confirm" class="btn btn-primary btn-full" data-i18n="done">完成</button>
                 </div>
             </div>
         </div>
@@ -287,15 +288,15 @@
         <div id="mobile-log-modal" class="modal-overlay hidden">
             <div class="modal-card rulebook-card">
                 <div class="rulebook-header">
-                    <h2>📜 战况历史日志</h2>
+                    <h2 data-i18n="battleLogTitle">📜 战况历史日志</h2>
                     <button id="btn-close-log-modal" class="btn-close">&times;</button>
                 </div>
                 <div class="rulebook-body" id="mobile-log-list-container">
                     <!-- JS 自动同步战况日志 -->
                 </div>
                 <div class="rulebook-footer">
-                    <button id="btn-clear-log-mobile" class="btn btn-secondary">清空日志</button>
-                    <button id="btn-close-log-modal-confirm" class="btn btn-primary">关闭</button>
+                    <button id="btn-clear-log-mobile" class="btn btn-secondary" data-i18n="clearLog">清空日志</button>
+                    <button id="btn-close-log-modal-confirm" class="btn btn-primary" data-i18n="close">关闭</button>
                 </div>
             </div>
         </div>
@@ -304,11 +305,11 @@
         <div id="rulebook-modal" class="modal-overlay hidden">
             <div class="modal-card rulebook-card">
                 <div class="rulebook-header">
-                    <h2>📖 精灵翻翻阵 - 规则说明</h2>
+                    <h2 id="rulebook-title">📖 精灵翻翻阵 - 规则说明</h2>
                     <button id="btn-close-rules" class="btn-close">&times;</button>
                 </div>
 
-                <div class="rulebook-body">
+                <div class="rulebook-body" id="rulebook-body">
                     <div class="rule-section">
                         <h3>🏆 1. 胜负判定</h3>
                         <p>4×4 棋盘（共 16 格）。盘满或双方无牌可出时，<b>控制卡牌数量多者获胜</b>。</p>
@@ -363,7 +364,7 @@
                 </div>
 
                 <div class="rulebook-footer">
-                    <button id="btn-understood" class="btn btn-primary">确定</button>
+                    <button id="btn-understood" class="btn btn-primary" data-i18n="confirm">确定</button>
                 </div>
             </div>
         </div>
@@ -371,13 +372,13 @@
         <!-- 结算弹窗 -->
         <div id="game-modal" class="modal-overlay hidden">
             <div class="modal-card">
-                <h2 id="modal-title">游戏结束</h2>
+                <h2 id="modal-title" data-i18n="gameOver">游戏结束</h2>
                 <div id="modal-body" class="modal-content"></div>
-                <button id="modal-btn-restart" class="btn btn-primary">再玩一局</button>
+                <button id="modal-btn-restart" class="btn btn-primary" data-i18n="playAgain">再玩一局</button>
             </div>
         </div>
     </div>
 
-    <script src="game.logs-v7.js?v=20260730-5"></script>
+    <script src="game.i18n-v8.js?v=20260730-6"></script>
 </body>
 </html>
