@@ -1006,15 +1006,14 @@ input:checked + .slider::before { transform: translateX(12px); }
     align-items: center;
 }
 
-.status-bar {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex: 0 0 auto;
-    z-index: 10;
+/* 桌面端：比分栏绝对居中于顶栏 */
+@media (min-width: 769px) {
+    .status-bar {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10;
+    }
 }
 
 .score-divider {
@@ -1210,7 +1209,7 @@ input:checked + .slider::before { transform: translateX(12px); }
         font-size: 0.8rem;
     }
 
-    .status-bar { gap: 0.25rem; }
+    .status-bar { gap: 0.25rem; position: static; transform: none; flex: 1; justify-content: center; }
     .player-score { padding: 0.15rem 0.35rem; border-radius: 10px; }
     .player-name { display: none; }
     .score-num { font-size: 0.9rem; width: 12px; }
